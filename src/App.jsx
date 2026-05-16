@@ -6,12 +6,16 @@ import LoginPage from './components/LoginPage';
 import PronosticosTab from './components/PronosticosTab';
 import RankingTab from './components/RankingTab';
 import AdminTab from './components/AdminTab';
+import { useNewResults } from './hooks/useNewResults';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
 const ALLOWED_EMAILS = [
-  "javee03@gmail.com"
+  // "juan@gmail.com",
+  // "maria@empresa.com",
+  "javee03@gmail.com",
+  "dolores.mansilla01@gmail.com"
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,27 +38,10 @@ export default function App() {
   if (!user)   return <LoginPage />;
 
   // Si hay lista de emails y el usuario no está → logout y splash
-if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
-  return (
-    <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⛔</div>
-        <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
-          Acceso no autorizado
-        </div>
-        <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
-          Tu cuenta no está habilitada para participar.
-        </div>
-        <button
-          onClick={() => logout().then(() => window.location.reload())}
-          style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
-        >
-          Salir
-        </button>
-      </div>
-    </div>
-  );
-}
+  if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
+    logout().then(() => window.location.reload());
+    return <div className="splash">⚽</div>;
+  }
 
   // Si intenta entrar a /admin sin ser admin → pantalla de acceso restringido
   if (IS_ADMIN_ROUTE && !ADMIN_UIDS.includes(user.uid)) {
@@ -91,6 +78,7 @@ function AuthorizedApp({ user }) {
   const { predictions, savePrediction } = usePredictions(user.uid);
   const { results, saveResult }         = useResults();
   const { ranking, loading: rankLoading } = useRanking();
+  const { hasNew, markAsSeen } = useNewResults(user.uid);
 
   useEffect(() => {
     registerUser(user);
@@ -172,9 +160,9 @@ function AuthorizedApp({ user }) {
           <button
             key={t}
             className={`tab-btn ${tab === i ? 'active' : ''}`}
-            onClick={() => setTab(i)}
+            onClick={() => { setTab(i); if (t === 'Ranking') markAsSeen(); }}
           >
-            {t}
+            {t}{t === 'Ranking' && hasNew && <span className="tab-badge"> </span>}
           </button>
         ))}
       </nav>

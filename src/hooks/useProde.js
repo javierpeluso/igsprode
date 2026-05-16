@@ -4,6 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { calcPoints, ALL_MATCHES } from '../data/fixture';
+import { markResultUpdated } from './useNewResults';
 
 // ── Firestore structure ──────────────────────────────────────────────────────
 // /users/{userId}           → { displayName, email, photoURL }
@@ -74,6 +75,7 @@ export function useResults() {
     const allResults = snap.exists() ? snap.data() : {};
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map((u) => recalcScore(u.id, allResults)));
+    await markResultUpdated();
   };
 
   return { results, saveResult };
