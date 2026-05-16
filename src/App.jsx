@@ -8,42 +8,70 @@ import RankingTab from './components/RankingTab';
 import AdminTab from './components/AdminTab';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Panel de admin: accedé a /admin en la URL para cargar resultados reales.
-// Ejemplo: http://localhost:3000/admin  o  https://tu-app.vercel.app/admin
+// 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
-const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
-console.log("pathname:", window.location.pathname);
-console.log("IS_ADMIN_ROUTE:", IS_ADMIN_ROUTE);
+const ALLOWED_EMAILS = [
+  "javee03@gmail.com"
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 👉 ADMINS — estos UIDs pueden acceder al panel /admin para cargar resultados
+//    Firebase Console → Authentication → Users → columna User UID
+// ─────────────────────────────────────────────────────────────────────────────
 const ADMIN_UIDS = [
   "NtYr9rClPcRoAfnTaaLNI6JYXqM2",
 ];
+
+const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Componente raíz — solo maneja auth, no abre Firestore todavía
+// ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
   const { user, loading } = useAuth();
-  const [tab, setTab] = useState(0);
-
-  const { predictions, savePrediction } = usePredictions(user?.uid);
-  const { results, saveResult } = useResults();
-  const { ranking, loading: rankLoading } = useRanking();
-
-  useEffect(() => {
-    if (user) registerUser(user);
-  }, [user]);
 
   if (loading) return <div className="splash">⚽</div>;
-  if (!user) return <LoginPage />;
+  if (!user)   return <LoginPage />;
 
-  console.log("UID del usuario logueado:", user.uid);
-console.log("¿Es admin?:", ADMIN_UIDS.includes(user.uid));
+  // Si hay lista de emails y el usuario no está → logout y splash
+if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
+  return (
+    <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⛔</div>
+        <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
+          Acceso no autorizado
+        </div>
+        <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
+          Tu cuenta no está habilitada para participar.
+        </div>
+        <button
+          onClick={() => logout().then(() => window.location.reload())}
+          style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
+        >
+          Salir
+        </button>
+      </div>
+    </div>
+  );
+}
 
-  // ── Vista admin (/admin) ──────────────────────────────────────────────────
-    if (IS_ADMIN_ROUTE && !ADMIN_UIDS.includes(user.uid)) {
+  // Si intenta entrar a /admin sin ser admin → pantalla de acceso restringido
+  if (IS_ADMIN_ROUTE && !ADMIN_UIDS.includes(user.uid)) {
     return (
       <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-        <div style={{ textAlign: 'center', color: '#888' }}>
+        <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-          <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: '#e8c84a', letterSpacing: '0.04em' }}>Acceso restringido</div>
-          <div style={{ fontSize: 13, marginTop: 8 }}>No tenés permiso para ver esta página.</div>
-          <button onClick={() => window.location.href = '/'} style={{ marginTop: 20, padding: '8px 20px', border: '1px solid #3a3a3a', borderRadius: 8, background: '#1e1e1e', color: '#f0f0f0', cursor: 'pointer', fontSize: 13 }}>
+          <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
+            Acceso restringido
+          </div>
+          <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
+            No tenés permiso para ver esta página.
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
+          >
             Volver al prode
           </button>
         </div>
@@ -51,6 +79,40 @@ console.log("¿Es admin?:", ADMIN_UIDS.includes(user.uid));
     );
   }
 
+  // Usuario autorizado → montamos los hooks de Firestore recién acá
+  return <AuthorizedApp user={user} />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Solo se monta si el usuario está autorizado — acá sí abrimos Firestore
+// ─────────────────────────────────────────────────────────────────────────────
+function AuthorizedApp({ user }) {
+  const [tab, setTab] = useState(0);
+  const { predictions, savePrediction } = usePredictions(user.uid);
+  const { results, saveResult }         = useResults();
+  const { ranking, loading: rankLoading } = useRanking();
+
+  useEffect(() => {
+    registerUser(user);
+  }, [user]);
+
+  const isAdmin = ADMIN_UIDS.includes(user.uid);
+
+  const LogoutBtn = () => (
+    <button className="btn-logout" onClick={logout} title="Salir">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  );
+
+  const UserAvatar = () => user.photoURL
+    ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
+    : <div className="user-initials">{(user.displayName || 'U')[0]}</div>;
+
+  // ── Vista admin ───────────────────────────────────────────────────────────
   if (IS_ADMIN_ROUTE) {
     return (
       <div className="app">
@@ -63,17 +125,14 @@ console.log("¿Es admin?:", ADMIN_UIDS.includes(user.uid));
             </div>
           </div>
           <div className="header-user">
-            {user.photoURL
-              ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
-              : <div className="user-initials">{(user.displayName || 'U')[0]}</div>
-            }
-            <button className="btn-logout" onClick={logout} title="Salir">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
+            <button
+              onClick={() => window.location.href = '/'}
+              style={{ padding: '6px 12px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 12 }}
+            >
+              ← Volver
             </button>
+            <UserAvatar />
+            <LogoutBtn />
           </div>
         </header>
         <main className="app-main">
@@ -95,24 +154,16 @@ console.log("¿Es admin?:", ADMIN_UIDS.includes(user.uid));
           </div>
         </div>
         <div className="header-user">
-          {user.photoURL
-            ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
-            : <div className="user-initials">{(user.displayName || 'U')[0]}</div>
-          }
-          {ADMIN_UIDS.includes(user.uid) && (
-            <button onClick={() => window.location.href = '/admin'}
-              style={{ padding: '6px 12px', border: '1px solid #e8c84a', borderRadius: 8, background: 'transparent', color: '#e8c84a', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-            title="Panel de admin">
+          {isAdmin && (
+            <button
+              onClick={() => window.location.href = '/admin'}
+              style={{ padding: '6px 12px', border: '1px solid var(--c-accent)', borderRadius: 8, background: 'transparent', color: 'var(--c-accent)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+            >
               Admin
             </button>
-      )}
-          <button className="btn-logout" onClick={logout} title="Salir">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-          </button>
+          )}
+          <UserAvatar />
+          <LogoutBtn />
         </div>
       </header>
 

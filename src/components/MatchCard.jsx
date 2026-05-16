@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { calcPoints, isClosed, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
+import Countdown from './Countdown';
 
 export default function MatchCard({ match, prediction, result, onSave }) {
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
-  const [dirty, setDirty]   = useState(false); // cambios sin guardar
-  const [status, setStatus] = useState('idle'); // idle | saving | saved | error
+  const [dirty, setDirty]   = useState(false);
+  const [status, setStatus] = useState('idle');
 
   const closed = isClosed(match);
   const hasResult = !!result;
   const pts = calcPoints(prediction, result);
 
-  // Inicializar inputs con pronóstico guardado
   useEffect(() => {
     if (prediction) {
       setHome(String(prediction.home));
@@ -110,12 +110,11 @@ export default function MatchCard({ match, prediction, result, onSave }) {
     <div className={`match-card ${hasPred ? 'has-pred' : 'no-pred'}`}>
       <div className="match-header">
         <span className="match-date">{formatKickoff(match.kickoff)}</span>
-        {hasPred && !dirty && (
-          <span className="saved-chip">✓ Guardado</span>
-        )}
-        {dirty && (
-          <span className="unsaved-chip">Sin guardar</span>
-        )}
+        <div className="match-header-right">
+          <Countdown kickoff={match.kickoff} />
+          {hasPred && !dirty && <span className="saved-chip">✓ Guardado</span>}
+          {dirty && <span className="unsaved-chip">Sin guardar</span>}
+        </div>
       </div>
 
       <div className="match-body">
