@@ -22,6 +22,26 @@
   --radius-lg:  16px;
 }
 
+
+/* ─── Tema claro ──────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --c-bg:       #f5f5f5;
+  --c-surface:  #ffffff;
+  --c-surface2: #f0f0f0;
+  --c-border:   #e0e0e0;
+  --c-border2:  #cccccc;
+  --c-text:     #111111;
+  --c-muted:    #777777;
+  --c-accent:   #c9a830;
+  --c-accent2:  #b8921e;
+  --c-green:    #2a9d56;
+  --c-blue:     #2980b9;
+  --c-red:      #d63031;
+  --c-exact:    #2a9d56;
+  --c-winner:   #2980b9;
+  --c-miss:     #aaaaaa;
+}
+
 /* ─── Reset ───────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; -webkit-text-size-adjust: 100%; }
@@ -1042,3 +1062,22 @@ img { display: block; }
 .filter-btn:hover .filter-badge { background: rgba(232,200,74,0.2); color: var(--c-accent); }
 .filter-badge.pending { background: rgba(244,90,90,0.15); color: var(--c-red); }
 .filter-badge.closed  { background: rgba(255,255,255,0.08); color: var(--c-muted); }
+
+/* ─── Theme toggle ────────────────────────────────────────────────────────── */
+.btn-theme {
+  background: none;
+  border: 1px solid var(--c-border2);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  line-height: 1;
+}
+.btn-theme:hover { border-color: var(--c-accent); }
+
+/* Asegurar transición suave entre temas */
+body, .app, .app-header, .match-card, .rank-row, .historial-row,
+.login-card, .tab-nav, .progress-wrap, .pending-row, .admin-row {
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}

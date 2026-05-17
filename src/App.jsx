@@ -8,6 +8,7 @@ import RankingTab from './components/RankingTab';
 import AdminTab from './components/AdminTab';
 import HistorialTab from './components/HistorialTab';
 import { useNewResults } from './hooks/useNewResults';
+import { useTheme } from './hooks/useTheme';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
@@ -78,6 +79,7 @@ function AuthorizedApp({ user }) {
   const { results, saveResult }         = useResults();
   const { ranking, loading: rankLoading } = useRanking();
   const { hasNew, markAsSeen } = useNewResults(user.uid);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     registerUser(user);
@@ -118,6 +120,9 @@ function AuthorizedApp({ user }) {
             >
               ← Volver
             </button>
+            <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
             <UserAvatar />
             <LogoutBtn />
           </div>
@@ -141,6 +146,9 @@ function AuthorizedApp({ user }) {
           </div>
         </div>
         <div className="header-user">
+          <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           {isAdmin && (
             <button
               onClick={() => window.location.href = '/admin'}
