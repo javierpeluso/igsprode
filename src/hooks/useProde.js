@@ -5,6 +5,7 @@ import {
 import { db } from '../lib/firebase';
 import { calcPoints, ALL_MATCHES } from '../data/fixture';
 import { markResultUpdated } from './useNewResults';
+import { pushResultEvent, pushJoinedEvent } from './useFeed';
 
 // ── Firestore structure ──────────────────────────────────────────────────────
 // /users/{userId}           → { displayName, email, photoURL }
@@ -31,8 +32,17 @@ async function recalcScore(userId, allResults) {
   const userSnap = await getDoc(doc(db, 'users', userId));
   const ud = userSnap.exists() ? userSnap.data() : {};
 
+  // Bonus campeón: +10 si acertó (solo cuando hay resultado oficial en /campeon_result/winner)
+  const campeonResultSnap = await getDoc(doc(db, '_meta', 'campeonWinner'));
+  const campeonWinner = campeonResultSnap.exists() ? campeonResultSnap.data().team : null;
+  const campeonPredSnap = await getDoc(doc(db, 'campeon', userId));
+  const campeonPred = campeonPredSnap.exists() ? campeonPredSnap.data().team : null;
+  const campeonBonus = campeonWinner && campeonPred && campeonWinner === campeonPred ? 10 : 0;
+
   await setDoc(doc(db, 'scores', userId), {
-    pts, exact, winner, played,
+    pts: pts + campeonBonus, exact, winner, played,
+    campeonPred: campeonPred || '',
+    campeonBonus,
     displayName: ud.displayName || '',
     email: ud.email || '',
     photoURL: ud.photoURL || '',
@@ -76,6 +86,9 @@ export function useResults() {
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map((u) => recalcScore(u.id, allResults)));
     await markResultUpdated();
+    // Push feed events for this result
+    const matchObj = ALL_MATCHES.find(m => m.id === matchId);
+    if (matchObj) await pushResultEvent(matchObj, home, away);
   };
 
   return { results, saveResult };
@@ -114,5 +127,6 @@ export async function registerUser(user) {
       email: user.email,
       photoURL: user.photoURL,
     });
+    await pushJoinedEvent(user);
   }
 }

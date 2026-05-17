@@ -9,6 +9,9 @@ import AdminTab from './components/AdminTab';
 import HistorialTab from './components/HistorialTab';
 import { useNewResults } from './hooks/useNewResults';
 import { useTheme } from './hooks/useTheme';
+import CampeonModal, { CampeonBanner } from './components/CampeonModal';
+import TablaTab from './components/TablaTab';
+import FeedTab from './components/FeedTab';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
@@ -80,6 +83,7 @@ function AuthorizedApp({ user }) {
   const { ranking, loading: rankLoading } = useRanking();
   const { hasNew, markAsSeen } = useNewResults(user.uid);
   const { theme, toggleTheme } = useTheme();
+  const [showCampeon, setShowCampeon] = useState(false);
 
   useEffect(() => {
     registerUser(user);
@@ -146,6 +150,7 @@ function AuthorizedApp({ user }) {
           </div>
         </div>
         <div className="header-user">
+          <CampeonBanner user={user} onClick={() => setShowCampeon(true)} />
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
@@ -163,7 +168,7 @@ function AuthorizedApp({ user }) {
       </header>
 
       <nav className="tab-nav">
-        {['Pronósticos', 'Resultados', 'Ranking'].map((t, i) => (
+        {['Pronósticos', 'Resultados', 'Tabla', 'Ranking', 'Feed'].map((t, i) => (
           <button
             key={t}
             className={`tab-btn ${tab === i ? 'active' : ''}`}
@@ -187,13 +192,18 @@ function AuthorizedApp({ user }) {
           <HistorialTab results={results} predictions={predictions} />
         )}
         {tab === 2 && (
+          <TablaTab results={results} />
+        )}
+        {tab === 3 && (
           <RankingTab
             ranking={ranking}
             loading={rankLoading}
             currentUid={user.uid}
           />
         )}
+        {tab === 4 && <FeedTab />}
       </main>
+      {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>
   );
 }
