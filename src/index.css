@@ -1021,7 +1021,7 @@ img { display: block; }
   color: var(--c-text);
   width: 100%;
 }
-.historial-team.home { justify-content: flex-end; }
+.historial-team.home { justify-content: flex-end; flex-direction: row-reverse; }
 .historial-team.away { justify-content: flex-start; }
 .historial-scores { text-align: center; }
 .historial-result {
@@ -1377,47 +1377,3 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   flex-shrink: 0;
 }
 .legend-dot.gold { background: #e8c84a; }
-
-/* ─── Feed de actividad ───────────────────────────────────────────────────── */
-.feed-list { display: flex; flex-direction: column; gap: 4px; }
-
-.feed-event {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius);
-  transition: background 0.15s;
-}
-.feed-event:hover { background: var(--c-surface2); }
-
-.feed-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.feed-content { flex: 1; min-width: 0; }
-.feed-text {
-  font-size: 13px;
-  color: var(--c-text);
-  line-height: 1.5;
-}
-.feed-name {
-  font-weight: 600;
-  color: var(--c-text);
-}
-.feed-highlight { font-weight: 600; }
-.feed-pts { font-weight: 700; }
-.feed-time {
-  font-size: 11px;
-  color: var(--c-muted);
-  margin-top: 3px;
-}
