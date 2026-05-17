@@ -6,14 +6,15 @@ import LoginPage from './components/LoginPage';
 import PronosticosTab from './components/PronosticosTab';
 import RankingTab from './components/RankingTab';
 import AdminTab from './components/AdminTab';
+import HistorialTab from './components/HistorialTab';
 import { useNewResults } from './hooks/useNewResults';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
 const ALLOWED_EMAILS = [
-    "javee03@gmail.com",
-    "dolores.mansilla01@gmail.com",
+  "javee03@gmail.com",
+  "dolores.mansilla01@gmail.com",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +155,7 @@ function AuthorizedApp({ user }) {
       </header>
 
       <nav className="tab-nav">
-        {['Pronósticos', 'Ranking'].map((t, i) => (
+        {['Pronósticos', 'Resultados', 'Ranking'].map((t, i) => (
           <button
             key={t}
             className={`tab-btn ${tab === i ? 'active' : ''}`}
@@ -175,6 +176,9 @@ function AuthorizedApp({ user }) {
           />
         )}
         {tab === 1 && (
+          <HistorialTab results={results} predictions={predictions} />
+        )}
+        {tab === 2 && (
           <RankingTab
             ranking={ranking}
             loading={rankLoading}
