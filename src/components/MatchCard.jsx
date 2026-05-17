@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { calcPoints, isClosed, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
 import Countdown from './Countdown';
+import MatchPredictions from './MatchPredictions';
 
-export default function MatchCard({ match, prediction, result, onSave }) {
+export default function MatchCard({ match, prediction, result, onSave, currentUid }) {
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
   const [dirty, setDirty]   = useState(false);
   const [status, setStatus] = useState('idle');
 
+  const [expanded, setExpanded] = useState(false);
   const closed = isClosed(match);
   const hasResult = !!result;
   const pts = calcPoints(prediction, result);
@@ -72,6 +74,10 @@ export default function MatchCard({ match, prediction, result, onSave }) {
             Tu pronóstico: {prediction.home} – {prediction.away}
           </div>
         )}
+        <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
+          {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
+        </button>
+        {expanded && <MatchPredictions match={match} result={result} currentUid={currentUid} />}
       </div>
     );
   }

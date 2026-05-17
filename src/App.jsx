@@ -12,10 +12,8 @@ import { useNewResults } from './hooks/useNewResults';
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
 const ALLOWED_EMAILS = [
-  // "juan@gmail.com",
-  // "maria@empresa.com",
-  "javee03@gmail.com",
-  "dolores.mansilla01@gmail.com"
+    "javee03@gmail.com",
+    "dolores.mansilla01@gmail.com",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,6 +171,7 @@ function AuthorizedApp({ user }) {
             predictions={predictions}
             results={results}
             onSave={savePrediction}
+            currentUid={user.uid}
           />
         )}
         {tab === 1 && (

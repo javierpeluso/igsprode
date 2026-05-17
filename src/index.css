@@ -715,3 +715,202 @@ img { display: block; }
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.6; transform: scale(0.8); }
 }
+
+/* ─── Ver pronósticos de todos ────────────────────────────────────────────── */
+.btn-ver-preds {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px dashed var(--c-border2);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-ver-preds:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+.match-predictions {
+  margin-top: 12px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 12px;
+}
+.preds-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.preds-list { display: flex; flex-direction: column; gap: 6px; }
+.preds-loading { font-size: 12px; color: var(--c-muted); padding: 8px 0; text-align: center; }
+
+.pred-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--c-surface2);
+}
+.pred-row.is-me { background: rgba(232,200,74,0.08); }
+
+.pred-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.pred-avatar-initials {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border2);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pred-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pred-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: var(--c-muted);
+  min-width: 48px;
+  text-align: center;
+}
+.pred-none { color: var(--c-border2); }
+.pred-pts {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+}
+.pred-pts.exact  { color: var(--c-exact); }
+.pred-pts.winner { color: var(--c-winner); }
+.pred-pts.miss   { color: var(--c-muted); }
+.pred-pts.no-pred { color: var(--c-border2); }
+
+/* ─── Barra de progreso ───────────────────────────────────────────────────── */
+.progress-wrap {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.progress-label { display: flex; align-items: baseline; gap: 2px; }
+.progress-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--c-accent);
+  line-height: 1;
+}
+.progress-total { font-size: 13px; color: var(--c-muted); }
+.progress-pending { font-size: 12px; color: var(--c-red); font-weight: 500; }
+.progress-closed { font-size: 12px; color: var(--c-green); font-weight: 500; }
+.progress-done   { font-size: 12px; color: var(--c-accent); font-weight: 600; }
+
+.progress-bar-bg {
+  height: 6px;
+  background: var(--c-surface2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-accent) 0%, var(--c-green) 100%);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+
+/* ─── Partidos pendientes ─────────────────────────────────────────────────── */
+.progress-pending {
+  font-size: 12px;
+  color: var(--c-red);
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline dotted;
+}
+.progress-pending:hover { color: var(--c-text); }
+
+.pending-list {
+  margin-top: 10px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pending-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--c-surface2);
+  border-radius: 8px;
+}
+.pending-teams {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--c-text);
+  flex: 1;
+  min-width: 0;
+}
+.pending-team {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.pending-vs {
+  font-size: 11px;
+  color: var(--c-muted);
+  flex-shrink: 0;
+}
+.pending-date {
+  font-size: 11px;
+  color: var(--c-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Pending row clickeable ──────────────────────────────────────────────── */
+.pending-row.clickable {
+  width: 100%;
+  text-align: left;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pending-row.clickable:hover {
+  background: rgba(232,200,74,0.08);
+  outline: 1px solid rgba(232,200,74,0.3);
+}
+.pending-row.clickable .pending-date { color: var(--c-accent); }
