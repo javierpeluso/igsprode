@@ -9,7 +9,7 @@ const FILTERS = [
   { key: 'closed',  label: 'Cerrados' },
 ];
 
-export default function PronosticosTab({ predictions, results, onSave, currentUid }) {
+export default function PronosticosTab({ predictions, results, onSave, currentUid, currentUser }) {
   const [activeGroup, setActiveGroup] = useState('A');
   const [filter, setFilter] = useState('all');
 
@@ -101,6 +101,7 @@ export default function PronosticosTab({ predictions, results, onSave, currentUi
                 result={results[match.id]}
                 onSave={onSave}
                 currentUid={currentUid}
+            currentUser={currentUser}
               />
             </div>
           ))}

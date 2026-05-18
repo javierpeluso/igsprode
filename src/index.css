@@ -1845,3 +1845,255 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
     font-size: 16px !important;
   }
 }
+
+/* ─── Reacciones feed ─────────────────────────────────────────────────────── */
+.feed-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface2);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.12s;
+  line-height: 1;
+}
+.reaction-btn:hover { border-color: var(--c-accent); background: rgba(232,200,74,0.08); }
+.reaction-btn.active { border-color: var(--c-accent); background: rgba(232,200,74,0.15); }
+.reaction-btn.small { font-size: 12px; padding: 2px 5px; }
+.reaction-count { font-size: 11px; font-weight: 600; color: var(--c-muted); }
+.reaction-btn.active .reaction-count { color: var(--c-accent); }
+
+/* ─── Comentarios en partidos ─────────────────────────────────────────────── */
+.match-comments { margin-top: 10px; }
+
+.btn-comments-toggle {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--c-border2);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.btn-comments-toggle:hover { border-color: var(--c-blue); color: var(--c-blue); }
+
+.comments-body {
+  margin-top: 8px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.comments-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+.comments-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.comment-row.is-me { flex-direction: row-reverse; }
+.comment-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.comment-avatar-initials {
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border2);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.comment-bubble {
+  max-width: 75%;
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.comment-row.is-me .comment-bubble {
+  background: rgba(232,200,74,0.1);
+  border-color: rgba(232,200,74,0.25);
+}
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.comment-name { font-size: 11px; font-weight: 600; color: var(--c-text); }
+.comment-time { font-size: 10px; color: var(--c-muted); }
+.comment-text { font-size: 13px; color: var(--c-text); line-height: 1.4; }
+.comment-reactions { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 3px; }
+
+.comment-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--c-border2);
+  border-radius: 20px;
+  background: var(--c-surface2);
+  color: var(--c-text);
+  font-size: 13px;
+  outline: none;
+}
+.comment-input:focus { border-color: var(--c-blue); }
+.btn-send-comment {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--c-blue);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-send-comment:hover:not(.disabled) { background: #3a9fd8; }
+.btn-send-comment.disabled { background: var(--c-surface2); color: var(--c-muted); cursor: not-allowed; }
+
+/* ─── Badge notificaciones perfil ─────────────────────────────────────────── */
+.profile-trigger-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--c-red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--c-surface);
+}
+
+/* ─── Tooltip reacciones ──────────────────────────────────────────────────── */
+.reaction-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.reaction-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #f0f0f0;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  border: 1px solid #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.reaction-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1a1a1a;
+}
+[data-theme="light"] .reaction-tooltip {
+  background: #222;
+  color: #fff;
+  border-color: #444;
+}
+
+/* ─── Comentarios en feed ─────────────────────────────────────────────────── */
+.feed-comments { margin-top: 6px; }
+
+.feed-comments-toggle {
+  background: none;
+  border: none;
+  color: var(--c-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color 0.15s;
+}
+.feed-comments-toggle:hover { color: var(--c-blue); }
+
+.feed-comments-body {
+  margin-top: 8px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 8px;
+}
+.feed-comments-empty {
+  font-size: 12px;
+  color: var(--c-muted);
+  padding: 6px 0 8px;
+}
+.feed-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.feed-comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.feed-comment-row.is-me { flex-direction: row-reverse; }
+.feed-comment-bubble {
+  max-width: 80%;
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+.feed-comment-row.is-me .feed-comment-bubble {
+  background: rgba(232,200,74,0.08);
+  border-color: rgba(232,200,74,0.2);
+}

@@ -137,8 +137,9 @@ function ProfilePanel({ user, stats, global, isAdmin, onClose }) {
   );
 }
 
-export default function ProfileMenu({ user, isAdmin }) {
+export default function ProfileMenu({ user, isAdmin, unread = 0, onOpen }) {
   const [open, setOpen] = useState(false);
+  const handleOpen = () => { setOpen(v => !v); if (!open && onOpen) onOpen(); };
   const ref = useRef(null);
   const { stats } = useUserStats(user.uid);
   const global = useGlobalStats();
@@ -152,11 +153,14 @@ export default function ProfileMenu({ user, isAdmin }) {
 
   return (
     <div className="profile-menu-wrap" ref={ref}>
-      <button className="profile-trigger" onClick={() => setOpen(v => !v)}>
-        {user.photoURL
-          ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
-          : <div className="user-initials">{(user.displayName || 'U')[0]}</div>
-        }
+      <button className="profile-trigger" onClick={handleOpen}>
+        <div className="profile-trigger-wrap">
+          {user.photoURL
+            ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
+            : <div className="user-initials">{(user.displayName || 'U')[0]}</div>
+          }
+          {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
+        </div>
       </button>
 
       {open && (

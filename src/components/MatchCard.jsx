@@ -3,8 +3,9 @@ import { calcPoints, isClosed, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
 import Countdown from './Countdown';
 import MatchPredictions from './MatchPredictions';
+import MatchComments from './MatchComments';
 
-export default function MatchCard({ match, prediction, result, onSave, currentUid }) {
+export default function MatchCard({ match, prediction, result, onSave, currentUid, currentUser }) {
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
   const [dirty, setDirty]   = useState(false);
@@ -78,6 +79,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
           {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
         </button>
         {expanded && <MatchPredictions match={match} result={result} currentUid={currentUid} />}
+        {currentUser && <MatchComments matchId={match.id} currentUser={currentUser} />}
       </div>
     );
   }

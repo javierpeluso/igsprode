@@ -15,6 +15,7 @@ import FeedTab from './components/FeedTab';
 import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
 import ProfileMenu from './components/ProfileMenu';
+import { useNotifications } from './hooks/useNotifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
@@ -22,6 +23,7 @@ import ProfileMenu from './components/ProfileMenu';
 const ALLOWED_EMAILS = [
   "javee03@gmail.com",
   "dolores.mansilla01@gmail.com",
+  "melgarejorf@gmail.com"
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,6 +107,7 @@ function AuthorizedApp({ user }) {
   const { theme, toggleTheme } = useTheme();
   const [showCampeon, setShowCampeon] = useState(false);
   const [adminTab, setAdminTab] = useState(0);
+  const { unread, markRead } = useNotifications(user.uid);
 
   useEffect(() => {
     registerUser(user);
@@ -181,7 +184,7 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <ProfileMenu user={user} isAdmin={isAdmin} />
+          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} onOpen={markRead} />
         </div>
       </header>
 
@@ -204,6 +207,7 @@ function AuthorizedApp({ user }) {
             results={results}
             onSave={savePrediction}
             currentUid={user.uid}
+            currentUser={user}
           />
         )}
         {tab === 1 && (
@@ -220,9 +224,10 @@ function AuthorizedApp({ user }) {
             ranking={ranking}
             loading={rankLoading}
             currentUid={user.uid}
+            currentUser={user}
           />
         )}
-        {tab === 5 && <FeedTab />}
+        {tab === 5 && <FeedTab currentUserId={user.uid} currentUserName={user.displayName} currentUser={user} />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>
