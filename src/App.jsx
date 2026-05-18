@@ -12,13 +12,16 @@ import { useTheme } from './hooks/useTheme';
 import CampeonModal, { CampeonBanner } from './components/CampeonModal';
 import TablaTab from './components/TablaTab';
 import FeedTab from './components/FeedTab';
+import BracketTab from './components/BracketTab';
+import AdminThirds from './components/AdminThirds';
+import ProfileMenu from './components/ProfileMenu';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
 const ALLOWED_EMAILS = [
   "javee03@gmail.com",
-  //"dolores.mansilla01@gmail.com",
+  "dolores.mansilla01@gmail.com",
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,28 +43,28 @@ export default function App() {
   if (loading) return <div className="splash">⚽</div>;
   if (!user)   return <LoginPage />;
 
-  // Si hay lista de emails y el usuario no está → logout y splash
-if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
-  return (
-    <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⛔</div>
-        <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
-          Acceso no autorizado
+  // Si hay lista de emails y el usuario no está → mostrar pantalla de no autorizado
+  if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
+    return (
+      <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⛔</div>
+          <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
+            Acceso no autorizado
+          </div>
+          <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
+            Tu cuenta no está habilitada para participar.
+          </div>
+          <button
+            onClick={() => logout().then(() => window.location.reload())}
+            style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
+          >
+            Salir
+          </button>
         </div>
-        <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
-          Tu cuenta no está habilitada para participar.
-        </div>
-        <button
-          onClick={() => logout().then(() => window.location.reload())}
-          style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
-        >
-          Salir
-        </button>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   // Si intenta entrar a /admin sin ser admin → pantalla de acceso restringido
   if (IS_ADMIN_ROUTE && !ADMIN_UIDS.includes(user.uid)) {
@@ -101,6 +104,7 @@ function AuthorizedApp({ user }) {
   const { hasNew, markAsSeen } = useNewResults(user.uid);
   const { theme, toggleTheme } = useTheme();
   const [showCampeon, setShowCampeon] = useState(false);
+  const [adminTab, setAdminTab] = useState(0);
 
   useEffect(() => {
     registerUser(user);
@@ -148,8 +152,14 @@ function AuthorizedApp({ user }) {
             <LogoutBtn />
           </div>
         </header>
+        <nav className="tab-nav">
+          {['Resultados', 'Terceros'].map((t, i) => (
+            <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
+          ))}
+        </nav>
         <main className="app-main">
-          <AdminTab results={results} onSave={saveResult} />
+          {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
+          {adminTab === 1 && <AdminThirds />}
         </main>
       </div>
     );
@@ -171,21 +181,12 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          {isAdmin && (
-            <button
-              onClick={() => window.location.href = '/admin'}
-              style={{ padding: '6px 12px', border: '1px solid var(--c-accent)', borderRadius: 8, background: 'transparent', color: 'var(--c-accent)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-            >
-              Admin
-            </button>
-          )}
-          <UserAvatar />
-          <LogoutBtn />
+          <ProfileMenu user={user} isAdmin={isAdmin} />
         </div>
       </header>
 
       <nav className="tab-nav">
-        {['Pronósticos', 'Resultados', 'Tabla', 'Ranking', 'Feed'].map((t, i) => (
+        {['Pronósticos', 'Resultados', 'Tabla', 'Fase Eliminatoria', 'Ranking', 'Feed'].map((t, i) => (
           <button
             key={t}
             className={`tab-btn ${tab === i ? 'active' : ''}`}
@@ -212,13 +213,16 @@ function AuthorizedApp({ user }) {
           <TablaTab results={results} />
         )}
         {tab === 3 && (
+          <BracketTab results={results} isAdmin={isAdmin} />
+        )}
+        {tab === 4 && (
           <RankingTab
             ranking={ranking}
             loading={rankLoading}
             currentUid={user.uid}
           />
         )}
-        {tab === 4 && <FeedTab />}
+        {tab === 5 && <FeedTab />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>

@@ -6,6 +6,7 @@ import { db } from '../lib/firebase';
 import { calcPoints, ALL_MATCHES } from '../data/fixture';
 import { markResultUpdated } from './useNewResults';
 import { pushResultEvent, pushJoinedEvent } from './useFeed';
+import { recalcUserStats, recalcGlobalStats } from './useProfile';
 
 // ── Firestore structure ──────────────────────────────────────────────────────
 // /users/{userId}           → { displayName, email, photoURL }
@@ -63,7 +64,9 @@ export function usePredictions(userId) {
   const savePrediction = async (matchId, home, away) => {
     await setDoc(doc(db, 'predictions', userId), { [matchId]: { home, away } }, { merge: true });
     const snap = await getDoc(doc(db, 'results', 'all'));
-    await recalcScore(userId, snap.exists() ? snap.data() : {});
+    const allRes = snap.exists() ? snap.data() : {};
+    await recalcScore(userId, allRes);
+    await recalcUserStats(userId, allRes);
   };
 
   return { predictions, savePrediction };
@@ -86,9 +89,12 @@ export function useResults() {
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map((u) => recalcScore(u.id, allResults)));
     await markResultUpdated();
-    // Push feed events for this result
+    // Push feed events
     const matchObj = ALL_MATCHES.find(m => m.id === matchId);
     if (matchObj) await pushResultEvent(matchObj, home, away);
+    // Recalc stats for all users
+    await Promise.all(usersSnap.docs.map(u => recalcUserStats(u.id, allResults)));
+    await recalcGlobalStats(allResults);
   };
 
   return { results, saveResult };

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Devuelve el tiempo restante hasta 2hs antes del partido
 function getTimeLeft(kickoff) {
-  const cutoff = new Date(kickoff).getTime() - 10 * 60 * 1000;0
+  const cutoff = new Date(kickoff).getTime() - 2 * 60 * 60 * 1000;
   const diff = cutoff - Date.now();
   if (diff <= 0) return null;
 
@@ -28,8 +28,10 @@ export default function Countdown({ kickoff }) {
 
   const { days, hours, minutes, seconds, diff } = timeLeft;
 
-  const isUrgent = diff < 2 * 60 * 60 * 1000;
-  const isVeryUrgent = diff < 30 * 60 * 1000;
+  // Urgente: menos de 6 horas
+  const isUrgent = diff < 6 * 60 * 60 * 1000;
+  // Muy urgente: menos de 1 hora
+  const isVeryUrgent = diff < 60 * 60 * 1000;
 
   let text;
   if (days > 0) {

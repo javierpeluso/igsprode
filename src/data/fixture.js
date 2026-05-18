@@ -152,7 +152,7 @@ export const ALL_MATCHES = Object.values(GROUPS).flatMap(g => g.matches);
 
 // Devuelve true si ya pasaron las 2hs previas al partido (pronóstico cerrado)
 export const isClosed = (match) => {
-  const cutoff = new Date(match.kickoff).getTime() - 10 * 60 * 1000;
+  const cutoff = new Date(match.kickoff).getTime() - 2 * 60 * 60 * 1000;
   return Date.now() >= cutoff;
 };
 
