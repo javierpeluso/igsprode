@@ -143,7 +143,6 @@ function AuthorizedApp({ user }) {
             <span className="header-logo">⚽</span>
             <div>
               <div className="header-title">Admin — Cargar Resultados</div>
-              <div className="header-sub">Solo vos ves esta pantalla</div>
             </div>
           </div>
           <div className="header-user">
