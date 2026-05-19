@@ -2097,3 +2097,371 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   background: rgba(232,200,74,0.08);
   border-color: rgba(232,200,74,0.2);
 }
+
+/* ─── Estadísticas de pronósticos ────────────────────────────────────────── */
+.match-stats {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-border);
+}
+.match-stats-title {
+  font-size: 11px;
+  color: var(--c-muted);
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.match-stats-loading,
+.match-stats-empty {
+  font-size: 11px;
+  color: var(--c-muted);
+  text-align: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-border);
+}
+
+.match-stats-bars {
+  display: grid;
+  grid-template-columns: 80px 1fr 36px;
+  align-items: center;
+  gap: 6px 8px;
+}
+.stats-team-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-team-label.home { text-align: right; }
+.stats-team-label.draw { text-align: right; color: var(--c-muted); font-weight: 400; }
+.stats-team-label.away { text-align: right; }
+
+.stats-bar-wrap {
+  height: 8px;
+  background: var(--c-surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stats-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  min-width: 2px;
+}
+.stats-bar.home { background: var(--c-accent); }
+.stats-bar.draw { background: var(--c-muted); opacity: 0.5; }
+.stats-bar.away { background: var(--c-blue); }
+
+.stats-pct {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+.stats-pct.home { color: var(--c-accent); }
+.stats-pct.draw { color: var(--c-muted); }
+.stats-pct.away { color: var(--c-blue); }
+
+/* ─── Página de estadísticas ──────────────────────────────────────────────── */
+.stats-page {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-bg);
+}
+.stats-page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.stats-back-btn {
+  background: none;
+  border: none;
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+.stats-back-btn:hover { opacity: 0.8; }
+.stats-page-user { display: flex; align-items: center; gap: 10px; }
+.stats-page-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.stats-page-avatar-initials {
+  background: var(--c-accent);
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stats-page-name { font-size: 15px; font-weight: 600; color: var(--c-text); }
+.stats-page-subtitle { font-size: 12px; color: var(--c-muted); }
+
+.stats-page-content { padding: 20px 16px 80px; }
+.stats-page-loading, .stats-page-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+.stats-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: var(--c-accent);
+  letter-spacing: 0.04em;
+  margin: 20px 0 10px;
+}
+.stats-section-title:first-child { margin-top: 0; }
+
+/* Grid de cards */
+.stats-page-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stats-page-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 430px) {
+  .stats-page-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .stats-page-grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+.stats-page-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+}
+.stats-page-icon { font-size: 22px; margin-bottom: 6px; }
+.stats-page-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--c-accent);
+}
+.stats-page-label { font-size: 11px; color: var(--c-muted); margin-top: 4px; }
+.stats-page-sub { font-size: 10px; color: var(--c-muted); opacity: 0.7; margin-top: 2px; }
+
+/* Rachas */
+.stats-page-rachas {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.streak-bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 30px;
+  align-items: center;
+  gap: 10px;
+}
+.streak-bar-label { font-size: 13px; color: var(--c-muted); }
+.streak-bar-wrap {
+  height: 8px;
+  background: var(--c-surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.streak-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; min-width: 4px; }
+.streak-bar-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; text-align: right; }
+
+.current-streak-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--c-surface2);
+  border-radius: var(--radius);
+}
+.current-streak-label { font-size: 13px; color: var(--c-muted); flex: 1; }
+.current-streak-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+.current-streak-sub { font-size: 11px; color: var(--c-muted); }
+
+/* vs Global */
+.stats-page-vs {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.vs-page-row { display: flex; flex-direction: column; gap: 6px; }
+.vs-page-label { font-size: 12px; font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.vs-page-values { display: flex; align-items: center; gap: 12px; }
+.vs-page-me { font-size: 15px; font-weight: 700; }
+.vs-page-global { font-size: 13px; color: var(--c-muted); }
+.vs-page-diff { font-size: 13px; font-weight: 700; margin-left: auto; }
+.vs-page-bar-wrap {
+  height: 6px;
+  background: var(--c-surface2);
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+}
+.vs-page-bar-me {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: 4px;
+  transition: width 0.5s;
+}
+.vs-page-bar-global {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: var(--c-muted);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+/* Top equipos */
+.stats-top-teams { display: flex; flex-direction: column; gap: 8px; }
+.stats-top-team-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.stats-top-rank { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--c-accent); width: 24px; text-align: center; }
+.stats-top-name { font-size: 13px; font-weight: 500; color: var(--c-text); min-width: 80px; }
+.stats-top-bar-wrap { flex: 1; height: 6px; background: var(--c-surface2); border-radius: 4px; overflow: hidden; }
+.stats-top-bar-fill { height: 100%; background: var(--c-green); border-radius: 4px; transition: width 0.5s; }
+.stats-top-pct { font-weight: 700; color: var(--c-green); font-size: 13px; min-width: 36px; text-align: right; }
+.stats-top-total { font-size: 11px; color: var(--c-muted); white-space: nowrap; }
+
+/* ProfileMenu quick stats */
+.profile-quick-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 0;
+  margin-bottom: 12px;
+}
+.profile-quick-item { text-align: center; }
+.profile-quick-val {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--c-accent);
+  line-height: 1;
+}
+.profile-quick-label { font-size: 11px; color: var(--c-muted); }
+.profile-quick-sep { width: 1px; height: 28px; background: var(--c-border); }
+.profile-action-btn.stats { border-color: rgba(62,207,114,0.3); color: var(--c-green); }
+.profile-action-btn.stats:hover { background: rgba(62,207,114,0.08); }
+
+/* ─── Admin Pronósticos ───────────────────────────────────────────────────── */
+.admin-pred-matches { display: flex; flex-direction: column; gap: 8px; }
+
+.admin-pred-match {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.admin-pred-match-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 10px;
+  text-align: left;
+  transition: background 0.15s;
+}
+.admin-pred-match-header:hover { background: var(--c-surface2); }
+
+.admin-pred-match-teams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.admin-pred-team {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+.admin-pred-vs { font-size: 11px; color: var(--c-muted); }
+
+.admin-pred-match-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.admin-pred-date { font-size: 11px; color: var(--c-muted); white-space: nowrap; }
+.admin-pred-count { font-size: 11px; white-space: nowrap; }
+.count-sent { color: var(--c-green); font-weight: 500; }
+.count-pending { color: var(--c-red); }
+.admin-pred-toggle { font-size: 11px; color: var(--c-muted); }
+
+.admin-pred-list {
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+}
+.admin-pred-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border);
+}
+.admin-pred-row:last-child { border-bottom: none; }
+.admin-pred-row.no-pred { opacity: 0.5; }
+.admin-pred-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--c-text);
+  font-weight: 500;
+}
+.admin-pred-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--c-accent);
+  letter-spacing: 0.04em;
+  min-width: 50px;
+  text-align: right;
+}
+.admin-pred-missing {
+  font-size: 12px;
+  color: var(--c-muted);
+  font-style: italic;
+}

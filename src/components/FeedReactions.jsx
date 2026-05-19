@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-const EMOJIS = ['🔥', '😂', '😭', '👏', '⚡', '🤌'];
+const EMOJIS = ['🔥', '😂', '😭', '👏', '⚡', '❤️​','😎​'];
 
 function ReactionTooltip({ names }) {
   if (!names || names.length === 0) return null;

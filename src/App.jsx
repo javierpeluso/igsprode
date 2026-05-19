@@ -14,7 +14,9 @@ import TablaTab from './components/TablaTab';
 import FeedTab from './components/FeedTab';
 import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
+import AdminPredictions from './components/AdminPredictions';
 import ProfileMenu from './components/ProfileMenu';
+import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,7 +25,6 @@ import { useNotifications } from './hooks/useNotifications';
 const ALLOWED_EMAILS = [
   "javee03@gmail.com",
   "dolores.mansilla01@gmail.com",
-  "melgarejorf@gmail.com"
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ function AuthorizedApp({ user }) {
   const { theme, toggleTheme } = useTheme();
   const [showCampeon, setShowCampeon] = useState(false);
   const [adminTab, setAdminTab] = useState(0);
+  const [showStats, setShowStats] = useState(false);
   const { unread, markRead } = useNotifications(user.uid);
 
   useEffect(() => {
@@ -128,6 +130,9 @@ function AuthorizedApp({ user }) {
   const UserAvatar = () => user.photoURL
     ? <img src={user.photoURL} alt={user.displayName} className="user-photo" referrerPolicy="no-referrer" />
     : <div className="user-initials">{(user.displayName || 'U')[0]}</div>;
+
+  // ── Vista estadísticas ───────────────────────────────────────────────────
+  if (showStats) return <StatsPage user={user} onBack={() => setShowStats(false)} />;
 
   // ── Vista admin ───────────────────────────────────────────────────────────
   if (IS_ADMIN_ROUTE) {
@@ -156,13 +161,14 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Terceros'].map((t, i) => (
+          {['Resultados', 'Pronósticos', 'Terceros'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
         </nav>
         <main className="app-main">
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
-          {adminTab === 1 && <AdminThirds />}
+          {adminTab === 1 && <AdminPredictions />}
+          {adminTab === 2 && <AdminThirds />}
         </main>
       </div>
     );
@@ -184,7 +190,7 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} onOpen={markRead} />
+          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} onOpen={markRead} onShowStats={() => setShowStats(true)} />
         </div>
       </header>
 

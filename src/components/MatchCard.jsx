@@ -3,9 +3,9 @@ import { calcPoints, isClosed, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
 import Countdown from './Countdown';
 import MatchPredictions from './MatchPredictions';
-import MatchComments from './MatchComments';
+import MatchStats from './MatchStats';
 
-export default function MatchCard({ match, prediction, result, onSave, currentUid, currentUser }) {
+export default function MatchCard({ match, prediction, result, onSave, currentUid }) {
   const [home, setHome] = useState('');
   const [away, setAway] = useState('');
   const [dirty, setDirty]   = useState(false);
@@ -75,11 +75,11 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
             Tu pronóstico: {prediction.home} – {prediction.away}
           </div>
         )}
+        <MatchStats match={match} />
         <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
           {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
         </button>
         {expanded && <MatchPredictions match={match} result={result} currentUid={currentUid} />}
-        {currentUser && <MatchComments matchId={match.id} currentUser={currentUser} />}
       </div>
     );
   }
@@ -106,6 +106,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
           ? <div className="my-pred">Tu pronóstico guardado</div>
           : <div className="my-pred no-pred-text">No enviaste pronóstico</div>
         }
+        <MatchStats match={match} />
       </div>
     );
   }
