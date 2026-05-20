@@ -70,9 +70,13 @@ export default function ProfileMenu({ user, isAdmin, unread = 0, onOpen, onShowS
                 📊 Ver mis estadísticas
               </button>
               {isAdmin && (
-                <button className="profile-action-btn admin" onClick={() => { window.location.href = '/admin'; setOpen(false); }}>
-                  ⚙️ Panel Admin
-                </button>
+                window.location.pathname === '/admin'
+                  ? <button className="profile-action-btn admin" onClick={() => { window.location.href = '/'; setOpen(false); }}>
+                      ← Volver al prode
+                    </button>
+                  : <button className="profile-action-btn admin" onClick={() => { window.location.href = '/admin'; setOpen(false); }}>
+                      ⚙️ Panel Admin
+                    </button>
               )}
               <button className="profile-action-btn logout" onClick={() => logout()}>
                 🚪 Cerrar sesión

@@ -10,7 +10,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="login-badge">⚽</div>
+        <div className="login-badge"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779284221/copa_del_mundo_sfms28.png" alt="Copa del Mundo" className="login-badge-img" /></div>
         <h1 className="login-title">PRODE<br />MUNDIAL<br />2026</h1>
         <p className="login-sub">
           Hacé tus pronósticos, competí con tu equipo<br />y seguí el ranking en tiempo real.

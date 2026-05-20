@@ -42,7 +42,7 @@ const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
 export default function App() {
   const { user, loading, isAllowed, isBlocked } = useAuth();
 
-  if (loading) return <div className="splash">⚽</div>;
+  if (loading) return <div className="splash"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779284221/copa_del_mundo_sfms28.png" alt="Copa del Mundo" className="splash-img" /></div>;
 
   // Pantalla de cuenta bloqueada — aparece siempre, sin importar el estado de auth
   if (isBlocked) {
@@ -163,23 +163,16 @@ function AuthorizedApp({ user }) {
       <div className="app">
         <header className="app-header">
           <div className="header-brand">
-            <span className="header-logo">⚽</span>
+            <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>
             <div>
               <div className="header-title">Admin — Cargar Resultados</div>
             </div>
           </div>
           <div className="header-user">
-            <button
-              onClick={() => window.location.href = '/'}
-              style={{ padding: '6px 12px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'transparent', color: 'var(--c-muted)', cursor: 'pointer', fontSize: 12 }}
-            >
-              ← Volver
-            </button>
             <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <UserAvatar />
-            <LogoutBtn />
+            <ProfileMenu user={user} isAdmin={true} unread={0} onOpen={() => {}} onShowStats={() => {}} />
           </div>
         </header>
         <nav className="tab-nav">
@@ -202,7 +195,7 @@ function AuthorizedApp({ user }) {
     <div className="app">
       <header className="app-header">
         <div className="header-brand">
-          <span className="header-logo">⚽</span>
+          <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>
           <div>
             <div className="header-title">Prode Mundial 2026</div>
             <div className="header-sub">11 jun – 19 jul · EE.UU., México y Canadá</div>
