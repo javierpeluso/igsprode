@@ -3,6 +3,7 @@ import { collection, onSnapshot, orderBy, query, limit } from 'firebase/firestor
 import { db } from '../lib/firebase';
 import FeedReactions from './FeedReactions';
 import FeedComments from './FeedComments';
+import GlobalChat from './GlobalChat';
 
 function timeAgo(ts) {
   if (!ts) return '';
@@ -75,23 +76,35 @@ export default function FeedTab({ currentUserId, currentUserName, currentUser, i
     return unsub;
   }, []);
 
-  if (loading) return <div className="empty-state">Cargando actividad...</div>;
-  if (events.length === 0) {
-    return (
-      <div className="tab-content">
+  return (
+    <div className="tab-content">
+      <GlobalChat currentUser={currentUser} isAdmin={isAdmin} />
+
+      {loading && (
+        <div className="empty-state">Cargando actividad...</div>
+      )}
+
+      {!loading && events.length === 0 && (
         <div className="empty-state">
           <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
           Todavía no hay actividad
         </div>
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <div className="tab-content">
-      <div className="feed-list">
-        {events.map(e => <FeedEvent key={e.id} event={e} currentUserId={currentUserId} currentUserName={currentUserName} currentUser={currentUser} isAdmin={isAdmin} />)}
-      </div>
+      {!loading && events.length > 0 && (
+        <div className="feed-list">
+          {events.map(e => (
+            <FeedEvent
+              key={e.id}
+              event={e}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              currentUser={currentUser}
+              isAdmin={isAdmin}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

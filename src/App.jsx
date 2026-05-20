@@ -132,7 +132,7 @@ function AuthorizedApp({ user }) {
   const [showCampeon, setShowCampeon] = useState(false);
   const [adminTab, setAdminTab] = useState(0);
   const [showStats, setShowStats] = useState(false);
-  const { unread, markRead } = useNotifications(user.uid);
+  const { unread, markRead, items } = useNotifications(user.uid);
 
   useEffect(() => {
     registerUser(user);
@@ -206,7 +206,7 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} onOpen={markRead} onShowStats={() => setShowStats(true)} />
+          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} items={items} onOpen={markRead} onShowStats={() => setShowStats(true)} />
         </div>
       </header>
 
