@@ -2822,6 +2822,101 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
 .chat-mention-option:hover,
 .chat-mention-option.active { background: var(--c-surface2); }
 
+/* ─── Citar mensaje — botón ↩ ─────────────────────────────────────────────── */
+.chat-reply-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-muted);
+  font-size: 13px;
+  padding: 0 3px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  margin-left: 2px;
+}
+.global-chat-row:hover .chat-reply-btn { opacity: 1; }
+.chat-reply-btn:hover { color: var(--c-accent); }
+
+/* Wrapper del botón para filas sin meta visible */
+.chat-reply-btn-inline {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2px;
+}
+.global-chat-row.is-me .chat-reply-btn-inline { justify-content: flex-start; }
+
+/* ─── Bloque de cita dentro del bubble ───────────────────────────────────── */
+.chat-quote-block {
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid var(--c-blue);
+  background: rgba(66,153,225,0.08);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 5px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.chat-quote-block.is-me {
+  border-left-color: var(--c-accent);
+  background: rgba(232,200,74,0.08);
+}
+.chat-quote-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-blue);
+  margin-bottom: 2px;
+}
+.chat-quote-block.is-me .chat-quote-name { color: var(--c-accent); }
+.chat-quote-text {
+  font-size: 12px;
+  color: var(--c-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Preview de cita en el input ────────────────────────────────────────── */
+.chat-reply-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--c-border);
+  background: rgba(66,153,225,0.06);
+}
+.chat-reply-preview-inner {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.chat-reply-preview-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-blue);
+}
+.chat-reply-preview-text {
+  font-size: 12px;
+  color: var(--c-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-reply-cancel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-muted);
+  font-size: 14px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.chat-reply-cancel:hover { color: var(--c-accent); }
+
 /* Etiqueta @nombre dentro del mensaje */
 .chat-mention-tag {
   color: var(--c-blue);

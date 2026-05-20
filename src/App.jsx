@@ -211,7 +211,7 @@ function AuthorizedApp({ user }) {
       </header>
 
       <nav className="tab-nav">
-        {['Pronósticos', 'Resultados', 'Tabla', 'Fase Eliminatoria', 'Ranking', 'Feed'].map((t, i) => (
+        {['Pronósticos', 'Resultados', 'Tabla', 'Fase Eliminatoria', 'Ranking', 'Chat'].map((t, i) => (
           <button
             key={t}
             className={`tab-btn ${tab === i ? 'active' : ''}`}
@@ -249,7 +249,7 @@ function AuthorizedApp({ user }) {
             currentUser={user}
           />
         )}
-        {tab === 5 && <FeedTab currentUserId={user.uid} currentUserName={user.displayName} currentUser={user} isAdmin={isAdmin} />}
+        {tab === 5 && <FeedTab currentUser={user} isAdmin={isAdmin} />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>

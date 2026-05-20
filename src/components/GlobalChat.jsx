@@ -37,6 +37,31 @@ function MessageText({ text }) {
   );
 }
 
+// Bloque de cita que aparece dentro del bubble
+function QuoteBlock({ replyTo, isMe }) {
+  if (!replyTo) return null;
+  return (
+    <div className={`chat-quote-block ${isMe ? 'is-me' : ''}`}>
+      <span className="chat-quote-name">{replyTo.displayName}</span>
+      <span className="chat-quote-text">{replyTo.text.length > 80 ? replyTo.text.slice(0, 80) + '…' : replyTo.text}</span>
+    </div>
+  );
+}
+
+// Preview de cita en el input
+function ReplyPreview({ replyTo, onCancel }) {
+  if (!replyTo) return null;
+  return (
+    <div className="chat-reply-preview">
+      <div className="chat-reply-preview-inner">
+        <span className="chat-reply-preview-name">Respondiendo a {replyTo.displayName}</span>
+        <span className="chat-reply-preview-text">{replyTo.text.length > 60 ? replyTo.text.slice(0, 60) + '…' : replyTo.text}</span>
+      </div>
+      <button className="chat-reply-cancel" onClick={onCancel} title="Cancelar respuesta">✕</button>
+    </div>
+  );
+}
+
 const CHAT_LIMIT = 80;
 
 export default function GlobalChat({ currentUser, isAdmin }) {
@@ -45,15 +70,16 @@ export default function GlobalChat({ currentUser, isAdmin }) {
   const [sending, setSending]       = useState(false);
   const [expanded, setExpanded]     = useState(false);
   const [unread, setUnread]         = useState(0);
-  const [users, setUsers]           = useState([]);       // todos los usuarios
-  const [mentionQuery, setMentionQuery] = useState('');   // texto después del @
-  const [mentionPos, setMentionPos]     = useState(null); // índice del @ en el texto
+  const [users, setUsers]           = useState([]);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPos, setMentionPos]     = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownIdx, setDropdownIdx]   = useState(0);
+  const [replyTo, setReplyTo]           = useState(null); // mensaje citado
 
-  const bottomRef        = useRef(null);
-  const inputRef         = useRef(null);
-  const lastSeenCount    = useRef(0);
+  const bottomRef     = useRef(null);
+  const inputRef      = useRef(null);
+  const lastSeenCount = useRef(0);
 
   // Cargar lista de usuarios una vez
   useEffect(() => {
@@ -86,7 +112,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
       }
     });
     return unsub;
-  }, []); // solo se ejecuta al montar
+  }, []);
 
   // Scroll al fondo al abrir o recibir mensajes
   useEffect(() => {
@@ -105,6 +131,14 @@ export default function GlobalChat({ currentUser, isAdmin }) {
     });
   };
 
+  // ── Citar un mensaje ──────────────────────────────────────────────────────
+  const handleReply = (msg) => {
+    setReplyTo({ id: msg.id, displayName: msg.displayName, text: msg.text });
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const cancelReply = () => setReplyTo(null);
+
   // ── Lógica de @menciones ──────────────────────────────────────────────────
   const filteredUsers = users.filter(u =>
     u.uid !== currentUser.uid &&
@@ -115,14 +149,12 @@ export default function GlobalChat({ currentUser, isAdmin }) {
     const val = e.target.value;
     setText(val);
 
-    // Detectar si hay un @ activo (el último @ antes del cursor)
     const cursor = e.target.selectionStart;
     const textBefore = val.slice(0, cursor);
     const atIdx = textBefore.lastIndexOf('@');
 
     if (atIdx !== -1) {
       const afterAt = textBefore.slice(atIdx + 1);
-      // Solo activa si no hay espacio doble (sigue siendo una palabra)
       if (!afterAt.includes('  ') && afterAt.length <= 30) {
         setMentionPos(atIdx);
         setMentionQuery(afterAt);
@@ -158,6 +190,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
       if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); insertMention(filteredUsers[dropdownIdx]); return; }
       if (e.key === 'Escape') { setShowDropdown(false); return; }
     }
+    if (e.key === 'Escape' && replyTo) { cancelReply(); return; }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
@@ -188,15 +221,25 @@ export default function GlobalChat({ currentUser, isAdmin }) {
     if (!trimmed || sending) return;
     setSending(true);
     try {
-      await addDoc(collection(db, 'global_chat'), {
+      const payload = {
         text:        trimmed,
         userId:      currentUser.uid,
         displayName: currentUser.displayName,
         photoURL:    currentUser.photoURL || null,
         createdAt:   serverTimestamp(),
-      });
+      };
+      // Adjuntar cita si hay una
+      if (replyTo) {
+        payload.replyTo = {
+          id:          replyTo.id,
+          displayName: replyTo.displayName,
+          text:        replyTo.text,
+        };
+      }
+      await addDoc(collection(db, 'global_chat'), payload);
       await extractAndNotify(trimmed);
       setText('');
+      setReplyTo(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     } catch (e) { console.error(e); }
     setSending(false);
@@ -233,7 +276,10 @@ export default function GlobalChat({ currentUser, isAdmin }) {
               const isMe = m.userId === currentUser.uid;
               const prevSame = idx > 0 && messages[idx - 1].userId === m.userId;
               return (
-                <div key={m.id} className={`global-chat-row ${isMe ? 'is-me' : ''} ${prevSame ? 'same-user' : ''}`}>
+                <div
+                  key={m.id}
+                  className={`global-chat-row ${isMe ? 'is-me' : ''} ${prevSame ? 'same-user' : ''}`}
+                >
                   {!isMe && !prevSame && <Avatar user={{ displayName: m.displayName, photoURL: m.photoURL }} />}
                   {!isMe && prevSame  && <div className="global-chat-avatar-spacer" />}
                   <div className="global-chat-bubble">
@@ -244,8 +290,26 @@ export default function GlobalChat({ currentUser, isAdmin }) {
                         {(isAdmin || isMe) && (
                           <button className="comment-delete-btn" onClick={() => handleDelete(m.id)} title="Eliminar">🗑</button>
                         )}
+                        {/* Botón citar */}
+                        <button
+                          className="chat-reply-btn"
+                          onClick={() => handleReply(m)}
+                          title="Citar mensaje"
+                        >↩</button>
                       </div>
                     )}
+                    {/* Si el meta está oculto (prevSame), igual mostramos el botón citar */}
+                    {prevSame && (
+                      <div className="chat-reply-btn-inline">
+                        <button
+                          className="chat-reply-btn"
+                          onClick={() => handleReply(m)}
+                          title="Citar mensaje"
+                        >↩</button>
+                      </div>
+                    )}
+                    {/* Bloque de cita si este mensaje responde a otro */}
+                    {m.replyTo && <QuoteBlock replyTo={m.replyTo} isMe={isMe} />}
                     <MessageText text={m.text} />
                   </div>
                 </div>
@@ -254,7 +318,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input con dropdown de menciones */}
+          {/* Input con dropdown de menciones y preview de cita */}
           <div className="chat-input-wrap">
             {showDropdown && filteredUsers.length > 0 && (
               <div className="chat-mention-dropdown">
@@ -272,6 +336,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
                 ))}
               </div>
             )}
+            <ReplyPreview replyTo={replyTo} onCancel={cancelReply} />
             <div className="comment-input-row">
               <Avatar user={{ displayName: currentUser.displayName, photoURL: currentUser.photoURL }} />
               <div className="chat-input-inner">
@@ -279,7 +344,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
                   ref={inputRef}
                   className="comment-input"
                   type="text"
-                  placeholder="Escribí algo… usá @ para mencionar"
+                  placeholder={replyTo ? `Respondiendo a ${replyTo.displayName}…` : 'Escribí algo… usá @ para mencionar'}
                   value={text}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
