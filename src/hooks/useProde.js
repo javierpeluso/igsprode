@@ -119,20 +119,34 @@ export function useRanking() {
 }
 
 export async function registerUser(user) {
+  // NO escribir en allowed_emails desde el cliente.
+  // El admin agrega los emails desde el panel.
+
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
-  if (!snap.exists()) {
+  const isNew = !snap.exists();
+
+  // Crear perfil si no existe
+  if (isNew) {
     await setDoc(ref, {
       displayName: user.displayName,
       email: user.email,
-      photoURL: user.photoURL,
+      photoURL: user.photoURL || '',
     });
-    await setDoc(doc(db, 'scores', user.uid), {
+  }
+
+  // Garantizar que scores siempre existe con valores iniciales
+  // (usa merge para no pisar puntos existentes)
+  const scoresRef = doc(db, 'scores', user.uid);
+  const scoresSnap = await getDoc(scoresRef);
+  if (!scoresSnap.exists()) {
+    await setDoc(scoresRef, {
       pts: 0, exact: 0, winner: 0, played: 0,
       displayName: user.displayName,
       email: user.email,
-      photoURL: user.photoURL,
+      photoURL: user.photoURL || '',
     });
-    await pushJoinedEvent(user);
   }
+
+  if (isNew) await pushJoinedEvent(user);
 }
