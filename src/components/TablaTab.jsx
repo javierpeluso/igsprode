@@ -69,7 +69,7 @@ export default function TablaTab({ results }) {
             className={`group-btn ${activeGroup === g ? 'active' : ''}`}
             onClick={() => setActiveGroup(g)}
           >
-            {g}
+            Grupo {g}
           </button>
         ))}
       </div>

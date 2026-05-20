@@ -96,7 +96,7 @@ export default function AdminPredictions() {
             className={`group-btn ${activeGroup === g ? 'active' : ''}`}
             onClick={() => setActiveGroup(g)}
           >
-            {g}
+            Grupo {g}
           </button>
         ))}
       </div>

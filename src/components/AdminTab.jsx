@@ -93,7 +93,7 @@ export default function AdminTab({ results, onSave }) {
             className={`group-btn ${activeGroup === g ? 'active' : ''}`}
             onClick={() => setActiveGroup(g)}
           >
-            {g}
+            Grupo {g}
           </button>
         ))}
       </div>
