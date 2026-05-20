@@ -15,6 +15,7 @@ import FeedTab from './components/FeedTab';
 import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
 import AdminPredictions from './components/AdminPredictions';
+import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
@@ -22,10 +23,8 @@ import { useNotifications } from './hooks/useNotifications';
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
 // ─────────────────────────────────────────────────────────────────────────────
-const ALLOWED_EMAILS = [
-  "javee03@gmail.com",
-  "dolores.mansilla01@gmail.com",
-];
+// ALLOWED_EMAILS ya no se usa — los emails se gestionan desde el panel Admin → Usuarios
+// y se guardan en Firestore en /allowed_emails
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 ADMINS — estos UIDs pueden acceder al panel /admin para cargar resultados
@@ -41,13 +40,37 @@ const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
 // Componente raíz — solo maneja auth, no abre Firestore todavía
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAllowed, isBlocked } = useAuth();
 
   if (loading) return <div className="splash">⚽</div>;
-  if (!user)   return <LoginPage />;
 
-  // Si hay lista de emails y el usuario no está → mostrar pantalla de no autorizado
-  if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(user.email)) {
+  // Pantalla de cuenta bloqueada — aparece siempre, sin importar el estado de auth
+  if (isBlocked) {
+    return (
+      <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <div style={{ fontSize: 18, fontFamily: 'Bebas Neue, sans-serif', color: 'var(--c-accent)', letterSpacing: '0.04em' }}>
+            Tu cuenta fue bloqueada
+          </div>
+          <div style={{ fontSize: 13, marginTop: 8, color: 'var(--c-muted)' }}>
+            No podés acceder a la app. Contactá al administrador.
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 20, padding: '8px 20px', border: '1px solid var(--c-border2)', borderRadius: 8, background: 'var(--c-surface2)', color: 'var(--c-text)', cursor: 'pointer', fontSize: 13 }}
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <LoginPage />;
+
+  // Si el usuario no está autorizado (no figura en allowed_emails) → pantalla de no autorizado
+  if (isAllowed === false) {
     return (
       <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
         <div style={{ textAlign: 'center' }}>
@@ -160,14 +183,15 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Pronósticos', 'Terceros'].map((t, i) => (
+          {['Resultados', 'Pronósticos', 'Usuarios', 'Terceros'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
         </nav>
         <main className="app-main">
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
           {adminTab === 1 && <AdminPredictions />}
-          {adminTab === 2 && <AdminThirds />}
+          {adminTab === 2 && <AdminUsers adminUids={ADMIN_UIDS} />}
+          {adminTab === 3 && <AdminThirds />}
         </main>
       </div>
     );

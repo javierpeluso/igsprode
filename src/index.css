@@ -2465,3 +2465,171 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   color: var(--c-muted);
   font-style: italic;
 }
+
+/* ─── Admin Usuarios ──────────────────────────────────────────────────────── */
+.admin-users-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.admin-users-stat {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 12px 8px;
+  text-align: center;
+}
+.admin-users-stat-val {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  color: var(--c-accent);
+  line-height: 1;
+}
+.admin-users-stat-label { font-size: 11px; color: var(--c-muted); }
+
+.admin-users-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.admin-users-list { display: flex; flex-direction: column; gap: 8px; }
+
+.admin-user-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.admin-user-card.blocked { border-color: rgba(244,90,90,0.3); opacity: 0.8; }
+
+.admin-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-user-header:hover { background: var(--c-surface2); }
+
+.admin-user-info { flex: 1; min-width: 0; }
+.admin-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.admin-user-email { font-size: 12px; color: var(--c-muted); margin-top: 2px; }
+
+.user-badge {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.admin-user-pts { text-align: right; flex-shrink: 0; }
+.admin-user-pts-val {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--c-accent);
+  line-height: 1;
+}
+.admin-user-pts-label { font-size: 10px; color: var(--c-muted); }
+.admin-user-toggle { font-size: 11px; color: var(--c-muted); flex-shrink: 0; }
+
+.admin-user-body {
+  border-top: 1px solid var(--c-border);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--c-surface2);
+}
+.admin-user-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-user-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.admin-action-btn {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border2);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.admin-action-btn:hover { border-color: var(--c-accent); }
+.admin-action-btn.reset:hover { border-color: var(--c-winner); color: var(--c-winner); }
+.admin-action-btn.block:hover { border-color: var(--c-accent); color: var(--c-accent); }
+.admin-action-btn.admin-toggle:hover { border-color: var(--c-green); color: var(--c-green); }
+.admin-action-btn.delete:hover { border-color: var(--c-red); color: var(--c-red); }
+
+/* Confirm modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.confirm-modal {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+.confirm-icon { font-size: 36px; margin-bottom: 12px; }
+.confirm-message { font-size: 14px; color: var(--c-text); line-height: 1.6; margin-bottom: 20px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--c-border2);
+  transition: all 0.15s;
+}
+.confirm-btn.cancel { background: var(--c-surface2); color: var(--c-muted); }
+.confirm-btn.cancel:hover { color: var(--c-text); }
+.confirm-btn.ok { background: var(--c-red); border-color: var(--c-red); color: #fff; }
+.confirm-btn.ok:hover { opacity: 0.85; }
+
+/* ─── Usuario pendiente (pre-autorizado) ──────────────────────────────────── */
+.admin-user-card.pending {
+  border-style: dashed;
+  opacity: 0.7;
+}

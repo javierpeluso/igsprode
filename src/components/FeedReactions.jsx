@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-const EMOJIS = ['🔥', '😂', '😭', '👏', '⚡', '❤️​','😎​'];
+const EMOJIS = ['🔥', '😂', '😭', '👏', '⚡', '❤️','😎'];
 
 function ReactionTooltip({ names }) {
   if (!names || names.length === 0) return null;
@@ -13,6 +13,7 @@ function ReactionTooltip({ names }) {
 }
 
 export default function FeedReactions({ eventId, currentUserId, currentUserName }) {
+  if (!currentUserId) return null;
   const [reactions, setReactions] = useState({});   // { emoji: count }
   const [userMap, setUserMap]     = useState({});   // { emoji: [name, ...] }
   const [myReaction, setMyReaction] = useState(null);

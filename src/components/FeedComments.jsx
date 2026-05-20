@@ -18,6 +18,7 @@ function Avatar({ user }) {
 }
 
 export default function FeedComments({ eventId, currentUser }) {
+  if (!currentUser) return null;
   const [comments, setComments] = useState([]);
   const [count, setCount]       = useState(0);
   const [text, setText]         = useState('');
