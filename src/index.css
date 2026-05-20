@@ -910,6 +910,8 @@ img { display: block; }
   padding: 6px 8px;
   background: var(--c-surface2);
   border-radius: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 .pending-teams {
   display: flex;
@@ -919,12 +921,16 @@ img { display: block; }
   color: var(--c-text);
   flex: 1;
   min-width: 0;
+  flex-wrap: wrap;
 }
 .pending-team {
   display: flex;
   align-items: center;
   gap: 4px;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pending-vs {
   font-size: 11px;
@@ -936,6 +942,30 @@ img { display: block; }
   color: var(--c-muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* ─── Pending list: fix mobile overflow ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .pending-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .pending-teams {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  .pending-team {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(50% - 20px);
+  }
+  .pending-date {
+    align-self: flex-end;
+    font-size: 10px;
+    margin-top: 2px;
+  }
 }
 
 /* ─── Pending row clickeable ──────────────────────────────────────────────── */
