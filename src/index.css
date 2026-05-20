@@ -1957,6 +1957,19 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
 }
 .comment-name { font-size: 11px; font-weight: 600; color: var(--c-text); }
 .comment-time { font-size: 10px; color: var(--c-muted); }
+.comment-delete-btn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  line-height: 1;
+  margin-left: auto;
+}
+.feed-comment-bubble:hover .comment-delete-btn { opacity: 0.6; }
+.comment-delete-btn:hover { opacity: 1 !important; }
 .comment-text { font-size: 13px; color: var(--c-text); line-height: 1.4; }
 .comment-reactions { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 3px; }
 

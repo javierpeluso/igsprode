@@ -23,7 +23,7 @@ const EVENT_CONFIG = {
   rank_up: { icon: '📈', color: 'var(--c-green)',  label: 'subió al' },
 };
 
-function FeedEvent({ event, currentUserId, currentUserName, currentUser }) {
+function FeedEvent({ event, currentUserId, currentUserName, currentUser, isAdmin }) {
   const cfg = EVENT_CONFIG[event.type] || { icon: '•', color: 'var(--c-muted)', label: '' };
 
   return (
@@ -56,13 +56,13 @@ function FeedEvent({ event, currentUserId, currentUserName, currentUser }) {
         </div>
         <div className="feed-time">{timeAgo(event.createdAt)}</div>
         <FeedReactions eventId={event.id} currentUserId={currentUserId} currentUserName={currentUserName} />
-        <FeedComments eventId={event.id} currentUser={currentUser} />
+        <FeedComments eventId={event.id} currentUser={currentUser} isAdmin={isAdmin} />
       </div>
     </div>
   );
 }
 
-export default function FeedTab({ currentUserId, currentUserName, currentUser }) {
+export default function FeedTab({ currentUserId, currentUserName, currentUser, isAdmin }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,7 +90,7 @@ export default function FeedTab({ currentUserId, currentUserName, currentUser })
   return (
     <div className="tab-content">
       <div className="feed-list">
-        {events.map(e => <FeedEvent key={e.id} event={e} currentUserId={currentUserId} currentUserName={currentUserName} currentUser={currentUser} />)}
+        {events.map(e => <FeedEvent key={e.id} event={e} currentUserId={currentUserId} currentUserName={currentUserName} currentUser={currentUser} isAdmin={isAdmin} />)}
       </div>
     </div>
   );

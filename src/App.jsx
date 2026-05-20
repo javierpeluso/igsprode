@@ -249,7 +249,7 @@ function AuthorizedApp({ user }) {
             currentUser={user}
           />
         )}
-        {tab === 5 && <FeedTab currentUserId={user.uid} currentUserName={user.displayName} currentUser={user} />}
+        {tab === 5 && <FeedTab currentUserId={user.uid} currentUserName={user.displayName} currentUser={user} isAdmin={isAdmin} />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>

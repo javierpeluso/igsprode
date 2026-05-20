@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 function timeAgo(ts) {
@@ -17,7 +17,7 @@ function Avatar({ user }) {
   return <div className="comment-avatar comment-avatar-initials">{initials}</div>;
 }
 
-export default function FeedComments({ eventId, currentUser }) {
+export default function FeedComments({ eventId, currentUser, isAdmin }) {
   if (!currentUser) return null;
   const [comments, setComments] = useState([]);
   const [count, setCount]       = useState(0);
@@ -75,6 +75,18 @@ export default function FeedComments({ eventId, currentUser }) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
+  const handleDelete = async (commentId) => {
+    if (!window.confirm('¿Eliminar este comentario?')) return;
+    try {
+      await deleteDoc(doc(db, 'feed_comments', eventId, 'messages', commentId));
+      // Actualizar contador
+      const countRef  = doc(db, 'feed_comment_counts', eventId);
+      const countSnap = await getDoc(countRef);
+      const current   = countSnap.exists() ? countSnap.data().count || 0 : 0;
+      await setDoc(countRef, { count: Math.max(0, current - 1) });
+    } catch (e) { console.error(e); }
+  };
+
   return (
     <div className="feed-comments">
       <button
@@ -100,6 +112,13 @@ export default function FeedComments({ eventId, currentUser }) {
                   <div className="comment-meta">
                     <span className="comment-name">{c.displayName}</span>
                     <span className="comment-time">{timeAgo(c.createdAt?.toMillis?.() || c.createdAt)}</span>
+                    {isAdmin && (
+                      <button
+                        className="comment-delete-btn"
+                        onClick={() => handleDelete(c.id)}
+                        title="Eliminar comentario"
+                      >🗑</button>
+                    )}
                   </div>
                   <div className="comment-text">{c.text}</div>
                 </div>
