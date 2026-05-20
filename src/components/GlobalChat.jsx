@@ -64,12 +64,15 @@ function ReplyPreview({ replyTo, onCancel }) {
 
 const CHAT_LIMIT = 80;
 
-export default function GlobalChat({ currentUser, isAdmin }) {
+export default function GlobalChat({ currentUser, isAdmin, alwaysExpanded = false }) {
   const [messages, setMessages]     = useState([]);
   const [text, setText]             = useState('');
   const [sending, setSending]       = useState(false);
   const [expanded, setExpanded]     = useState(false);
   const [unread, setUnread]         = useState(0);
+
+  // En modo alwaysExpanded siempre está abierto
+  const isExpanded = alwaysExpanded || expanded;
   const [users, setUsers]           = useState([]);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionPos, setMentionPos]     = useState(null);
@@ -106,7 +109,7 @@ export default function GlobalChat({ currentUser, isAdmin }) {
         createdAt: d.data().createdAt?.toMillis?.() || d.data().createdAt,
       }));
       setMessages(msgs);
-      if (!expanded) {
+      if (!isExpanded) {
         const newCount = msgs.length - lastSeenCount.current;
         if (newCount > 0) setUnread(prev => prev + newCount);
       }
@@ -116,10 +119,10 @@ export default function GlobalChat({ currentUser, isAdmin }) {
 
   // Scroll al fondo al abrir o recibir mensajes
   useEffect(() => {
-    if (expanded) {
+    if (isExpanded) {
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
     }
-  }, [messages, expanded]);
+  }, [messages, isExpanded]);
 
   const handleToggle = () => {
     setExpanded(v => {
@@ -252,20 +255,22 @@ export default function GlobalChat({ currentUser, isAdmin }) {
   };
 
   return (
-    <div className="global-chat-wrap">
-      {/* Header toggle */}
-      <button className="global-chat-header" onClick={handleToggle}>
-        <span className="global-chat-title">
-          <span className="global-chat-icon">💬</span>
-          Chat general
-          {unread > 0 && !expanded && (
-            <span className="global-chat-badge">{unread > 9 ? '9+' : unread}</span>
-          )}
-        </span>
-        <span className="global-chat-chevron">{expanded ? '▲' : '▼'}</span>
-      </button>
+    <div className={`global-chat-wrap${alwaysExpanded ? ' global-chat-wrap--fixed' : ''}`}>
+      {/* Header toggle — se oculta en modo fijo */}
+      {!alwaysExpanded && (
+        <button className="global-chat-header" onClick={handleToggle}>
+          <span className="global-chat-title">
+            <span className="global-chat-icon">💬</span>
+            Chat general
+            {unread > 0 && !expanded && (
+              <span className="global-chat-badge">{unread > 9 ? '9+' : unread}</span>
+            )}
+          </span>
+          <span className="global-chat-chevron">{expanded ? '▲' : '▼'}</span>
+        </button>
+      )}
 
-      {expanded && (
+      {isExpanded && (
         <div className="global-chat-body">
           {/* Mensajes */}
           <div className="global-chat-messages">
