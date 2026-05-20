@@ -81,7 +81,7 @@ export default function PronosticosTab({ predictions, results, onSave, currentUi
             className={`group-btn ${activeGroup === g ? 'active' : ''}`}
             onClick={() => setActiveGroup(g)}
           >
-            {g}
+            Grupo {g}
           </button>
         ))}
       </div>

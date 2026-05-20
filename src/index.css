@@ -225,21 +225,24 @@ img { display: block; }
 
 /* ─── Group nav ───────────────────────────────────────────────────────────── */
 .group-nav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin-bottom: 16px;
 }
 .group-btn {
-  width: 38px; height: 38px;
+  padding: 7px 4px;
   border: 1px solid var(--c-border2);
   border-radius: 8px;
   background: var(--c-surface2);
   color: var(--c-muted);
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 17px;
-  letter-spacing: 0.04em;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  white-space: nowrap;
   transition: all 0.12s;
+  cursor: pointer;
 }
 .group-btn.active {
   background: var(--c-accent);
@@ -249,6 +252,10 @@ img { display: block; }
 .group-btn:hover:not(.active) {
   border-color: var(--c-accent);
   color: var(--c-accent);
+}
+@media (max-width: 375px) {
+  .group-nav { grid-template-columns: repeat(3, 1fr); }
+  .group-btn { font-size: 13px; }
 }
 
 /* ─── Match card ──────────────────────────────────────────────────────────── */
