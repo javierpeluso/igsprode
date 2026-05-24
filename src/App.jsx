@@ -176,7 +176,7 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Pronósticos', 'Usuarios', 'Terceros'].map((t, i) => (
+          {['Resultados', 'Pronósticos', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
         </nav>
@@ -185,6 +185,7 @@ function AuthorizedApp({ user }) {
           {adminTab === 1 && <AdminPredictions />}
           {adminTab === 2 && <AdminUsers adminUids={ADMIN_UIDS} />}
           {adminTab === 3 && <AdminThirds />}
+          {adminTab === 4 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
         </main>
       </div>
     );
