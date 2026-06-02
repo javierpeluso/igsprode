@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Devuelve el tiempo restante hasta 2hs antes del partido
 function getTimeLeft(kickoff) {
-  const cutoff = new Date(kickoff).getTime() - 2 * 60 * 60 * 1000;
+  const cutoff = new Date(kickoff).getTime()  - 10 * 60 * 1000;
   const diff = cutoff - Date.now();
   if (diff <= 0) return null;
 
