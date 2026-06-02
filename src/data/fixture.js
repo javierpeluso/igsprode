@@ -6,7 +6,7 @@ export const GROUPS = {
     name: 'Grupo A',
     teams: ['México', 'Sudáfrica', 'Corea del Sur', 'Rep. Checa'],
     matches: [
-      { id: 'A_0', home: 'México',        away: 'Sudáfrica',     kickoff: '2026-06-02T17:00:00-03:00', venue: 'Estadio Azteca, CDMX' },
+      { id: 'A_0', home: 'México',        away: 'Sudáfrica',     kickoff: '2026-06-11T16:00:00-03:00', venue: 'Estadio Azteca, CDMX' },
       { id: 'A_1', home: 'Corea del Sur', away: 'Rep. Checa',    kickoff: '2026-06-11T23:00:00-03:00', venue: 'Estadio Akron, Guadalajara' },
       { id: 'A_2', home: 'México',        away: 'Corea del Sur', kickoff: '2026-06-18T22:00:00-03:00', venue: 'Estadio Azteca, CDMX' },
       { id: 'A_3', home: 'Rep. Checa',    away: 'Sudáfrica',     kickoff: '2026-06-18T13:00:00-03:00', venue: 'Mercedes-Benz, Atlanta' },
