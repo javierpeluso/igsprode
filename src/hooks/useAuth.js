@@ -21,11 +21,16 @@ export function useAuth() {
         return;
       }
 
+      // Resetear isAllowed a undefined para que loading = true
+      // mientras se espera la respuesta de Firestore
+      setIsAllowed(undefined);
       setUser(u);
 
-      // onSnapshot se reconecta automáticamente cuando el token está listo
+      // Normalizar el email a minúsculas para coincidir con el ID del doc en allowed_emails
+      const emailKey = u.email.toLowerCase();
+
       emailUnsub = onSnapshot(
-        doc(db, 'allowed_emails', u.email),
+        doc(db, 'allowed_emails', emailKey),
         (snap) => {
           if (!snap.exists()) {
             setIsAllowed(false);

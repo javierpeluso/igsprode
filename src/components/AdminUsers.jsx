@@ -195,13 +195,15 @@ export default function AdminUsers({ adminUids }) {
     scoresSnap.docs.forEach(d => { scoresMap[d.id] = d.data().pts || 0; });
     setScores(scoresMap);
 
-    const registeredEmails = new Set(usersSnap.docs.map(d => d.data().email));
+    const registeredEmails = new Set(usersSnap.docs.map(d => (d.data().email || "").toLowerCase()));
     const list = usersSnap.docs.map(d => ({ uid: d.id, ...d.data(), pts: scoresMap[d.id] ?? 0, registered: true }));
 
-    // Agregar emails pre-autorizados que aún no se loguearon
+    // Agregar emails pre-autorizados que aún no se loguearon (excluir bloqueados)
     allowedSnap.docs.forEach(d => {
-      const email = d.data().email;
-      if (!registeredEmails.has(email)) {
+      const data  = d.data();
+      // Usar el ID del doc como fuente de verdad (siempre lowercase)
+      const email = d.id;
+      if (!registeredEmails.has(email) && !data.blocked) {
         list.push({ uid: `pending_${email}`, email, displayName: email, pts: 0, registered: false, pending: true });
       }
     });
