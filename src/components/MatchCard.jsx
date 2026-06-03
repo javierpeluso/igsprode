@@ -150,6 +150,8 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
         <span className="team away"><Flag country={match.away} />{match.away}</span>
       </div>
 
+      <MatchStats match={match} />
+
       <div className="match-footer">
         <span className="venue-text">{match.venue}</span>
         <button
