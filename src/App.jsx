@@ -117,7 +117,12 @@ export default function App() {
   }
 
   // Usuario autorizado → montamos los hooks de Firestore recién acá
-  return <AuthorizedApp user={user} />;
+  return (
+    <>
+      <AuthorizedApp user={user} />
+      <Analytics />
+    </>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,7 +162,12 @@ function AuthorizedApp({ user }) {
     : <div className="user-initials">{(user.displayName || 'U')[0]}</div>;
 
   // ── Vista estadísticas ───────────────────────────────────────────────────
-  if (showStats) return <StatsPage user={user} onBack={() => setShowStats(false)} />;
+  if (showStats) return (
+    <>
+      <StatsPage user={user} onBack={() => setShowStats(false)} />
+      <Analytics />
+    </>
+  );
 
   // ── Vista admin ───────────────────────────────────────────────────────────
   if (IS_ADMIN_ROUTE) {
@@ -204,6 +214,7 @@ function AuthorizedApp({ user }) {
           {adminTab === 3 && <AdminThirds />}
           {adminTab === 4 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
         </main>
+        <Analytics />
       </div>
     );
   }
@@ -275,8 +286,7 @@ function AuthorizedApp({ user }) {
         {tab === 5 && <FeedTab currentUser={user} isAdmin={isAdmin} />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
+      <Analytics />
     </div>
   );
-
-  <Analytics/>
 }
