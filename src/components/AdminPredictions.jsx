@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GROUPS, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
@@ -10,16 +10,51 @@ function Avatar({ user }) {
   return <div className="pred-avatar pred-avatar-initials">{initials}</div>;
 }
 
-function MatchPredRow({ match, users, predictions }) {
+function ConfirmModal({ message, onConfirm, onCancel }) {
+  return (
+    <div className="confirm-overlay" onClick={onCancel}>
+      <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon">⚠️</div>
+        <div className="confirm-message">{message}</div>
+        <div className="confirm-actions">
+          <button className="confirm-btn cancel" onClick={onCancel}>Cancelar</button>
+          <button className="confirm-btn ok" onClick={onConfirm}>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchPredRow({ match, users, predictions, onDeletePrediction }) {
   const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+  const [deleting, setDeleting] = useState(null); // uid being deleted
 
   const preds = users.map(u => ({
     ...u,
     pred: predictions[u.uid]?.[match.id] || null,
   }));
 
-  const sent     = preds.filter(p => p.pred).length;
-  const pending  = preds.filter(p => !p.pred).length;
+  const sent    = preds.filter(p => p.pred).length;
+  const pending = preds.filter(p => !p.pred).length;
+
+  const handleDeleteClick = (uid, displayName) => {
+    setConfirm({
+      uid,
+      message: `¿Eliminar el pronóstico de ${displayName} para ${match.home} vs ${match.away}? Esta acción no se puede deshacer.`,
+    });
+  };
+
+  const handleConfirm = async () => {
+    const { uid } = confirm;
+    setConfirm(null);
+    setDeleting(uid);
+    try {
+      await onDeletePrediction(uid, match.id);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   return (
     <div className="admin-pred-match">
@@ -49,44 +84,78 @@ function MatchPredRow({ match, users, predictions }) {
                 ? <span className="admin-pred-score">{pred.home} – {pred.away}</span>
                 : <span className="admin-pred-missing">Sin pronóstico</span>
               }
+              {pred && (
+                <button
+                  className="admin-pred-delete-btn"
+                  title="Eliminar pronóstico"
+                  disabled={deleting === uid}
+                  onClick={() => handleDeleteClick(uid, displayName)}
+                >
+                  {deleting === uid ? '...' : '🗑️'}
+                </button>
+              )}
             </div>
           ))}
         </div>
+      )}
+
+      {confirm && (
+        <ConfirmModal
+          message={confirm.message}
+          onConfirm={handleConfirm}
+          onCancel={() => setConfirm(null)}
+        />
       )}
     </div>
   );
 }
 
 export default function AdminPredictions() {
-  const [users, setUsers]           = useState([]);
+  const [users, setUsers]             = useState([]);
   const [predictions, setPredictions] = useState({});
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]         = useState(true);
   const [activeGroup, setActiveGroup] = useState('A');
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      const usersSnap = await getDocs(collection(db, 'users'));
-      const usersList = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
-      setUsers(usersList);
+  const fetchAll = async () => {
+    setLoading(true);
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const usersList = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    setUsers(usersList);
 
-      const predsMap = {};
-      await Promise.all(usersList.map(async u => {
-        const snap = await getDoc(doc(db, 'predictions', u.uid));
-        predsMap[u.uid] = snap.exists() ? snap.data() : {};
-      }));
-      setPredictions(predsMap);
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
+    const predsMap = {};
+    await Promise.all(usersList.map(async u => {
+      const snap = await getDoc(doc(db, 'predictions', u.uid));
+      predsMap[u.uid] = snap.exists() ? snap.data() : {};
+    }));
+    setPredictions(predsMap);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  // Elimina un pronóstico específico de un usuario para un partido
+  const handleDeletePrediction = async (uid, matchId) => {
+    // Usar deleteField() para borrar solo ese campo del documento
+    await updateDoc(doc(db, 'predictions', uid), {
+      [matchId]: deleteField(),
+    });
+    // Actualizar estado local para reflejar el cambio de inmediato
+    setPredictions(prev => {
+      const updated = { ...prev };
+      if (updated[uid]) {
+        updated[uid] = { ...updated[uid] };
+        delete updated[uid][matchId];
+      }
+      return updated;
+    });
+  };
 
   if (loading) return <div className="empty-state">Cargando pronósticos...</div>;
 
   return (
     <div className="tab-content">
       <div className="admin-notice">
-        Pronósticos de todos los participantes por partido. Expandí cada partido para verlos.
+        Pronósticos de todos los participantes por partido. Expandí cada partido para verlos o eliminar uno.
       </div>
 
       <div className="group-nav">
@@ -108,6 +177,7 @@ export default function AdminPredictions() {
             match={match}
             users={users}
             predictions={predictions}
+            onDeletePrediction={handleDeletePrediction}
           />
         ))}
       </div>

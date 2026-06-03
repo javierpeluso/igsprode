@@ -7,7 +7,7 @@ import PronosticosTab from './components/PronosticosTab';
 import RankingTab from './components/RankingTab';
 import AdminTab from './components/AdminTab';
 import HistorialTab from './components/HistorialTab';
-import { useNewResults } from './hooks/useNewResults';
+import { useNewResults, useAutoRefresh, publishNewVersion } from './hooks/useNewResults';
 import { useTheme } from './hooks/useTheme';
 import CampeonModal, { CampeonBanner } from './components/CampeonModal';
 import TablaTab from './components/TablaTab';
@@ -129,6 +129,7 @@ function AuthorizedApp({ user }) {
   const { ranking, loading: rankLoading } = useRanking();
   const { hasNew, markAsSeen } = useNewResults(user.uid);
   const { theme, toggleTheme } = useTheme();
+  const { newVersionAvailable } = useAutoRefresh();
   const [showCampeon, setShowCampeon] = useState(false);
   const [adminTab, setAdminTab] = useState(0);
   const [showStats, setShowStats] = useState(false);
@@ -161,6 +162,11 @@ function AuthorizedApp({ user }) {
   if (IS_ADMIN_ROUTE) {
     return (
       <div className="app">
+        {newVersionAvailable && (
+          <div className="new-version-banner">
+            🔄 Nueva versión detectada — recargando…
+          </div>
+        )}
         <header className="app-header">
           <div className="header-brand">
             <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>
@@ -179,6 +185,16 @@ function AuthorizedApp({ user }) {
           {['Resultados', 'Pronósticos', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
+          <button
+            className="tab-btn tab-btn-publish"
+            title="Fuerza un reload en todos los navegadores que tienen la app abierta"
+            onClick={async () => {
+              await publishNewVersion();
+              alert('✅ Versión publicada — todos los clientes recargarán en breve.');
+            }}
+          >
+            🚀 Publicar versión
+          </button>
         </nav>
         <main className="app-main">
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
@@ -194,6 +210,11 @@ function AuthorizedApp({ user }) {
   // ── Vista usuario normal ──────────────────────────────────────────────────
   return (
     <div className="app">
+      {newVersionAvailable && (
+        <div className="new-version-banner">
+          🔄 Nueva versión disponible — recargando…
+        </div>
+      )}
       <header className="app-header">
         <div className="header-brand">
           <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>
