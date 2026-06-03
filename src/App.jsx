@@ -19,6 +19,7 @@ import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
+import { Analytics } from "@vercel/analytics/react"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 👉 USUARIOS PERMITIDOS — solo estos emails pueden ingresar a la app
@@ -276,4 +277,6 @@ function AuthorizedApp({ user }) {
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
     </div>
   );
+
+  <Analytics/>
 }
