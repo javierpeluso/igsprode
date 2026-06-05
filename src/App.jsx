@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { usePredictions, useResults, useRanking, registerUser } from './hooks/useProde';
-import { logout } from './lib/firebase';
+import { logout, db } from './lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import LoginPage from './components/LoginPage';
 import PronosticosTab from './components/PronosticosTab';
 import RankingTab from './components/RankingTab';
@@ -19,6 +20,7 @@ import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
+import PaymentWarningBanner from './components/PaymentWarningBanner';
 import { Analytics } from "@vercel/analytics/react"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,10 +142,19 @@ function AuthorizedApp({ user }) {
   const [adminTab, setAdminTab] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const { unread, markRead, items } = useNotifications(user.uid);
+  const [paymentWarning, setPaymentWarning] = useState(false);
 
   useEffect(() => {
     registerUser(user);
   }, [user]);
+
+  // Escucha en tiempo real si el admin activó advertencia de pago
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'users', user.uid), snap => {
+      if (snap.exists()) setPaymentWarning(!!snap.data().paymentWarning);
+    });
+    return () => unsub();
+  }, [user.uid]);
 
   const isAdmin = ADMIN_UIDS.includes(user.uid);
 
@@ -227,6 +238,7 @@ function AuthorizedApp({ user }) {
           🔄 Nueva versión disponible — recargando…
         </div>
       )}
+      {paymentWarning && <PaymentWarningBanner key={String(paymentWarning)} />}
       <header className="app-header">
         <div className="header-brand">
           <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>

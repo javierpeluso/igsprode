@@ -97,6 +97,21 @@ function UserRow({ user, adminUids, onAction }) {
     }); }
   });
 
+  const handlePaymentWarning = () => setConfirm({
+    message: `¿Enviar advertencia de pago a ${user.displayName}? Verá un cartel de aviso cada vez que abra la app.`,
+    onConfirm: () => { setConfirm(null); act(async () => {
+      if (user.uid && !user.pending) {
+        await updateDoc(doc(db, 'users', user.uid), { paymentWarning: true });
+      }
+    }); }
+  });
+
+  const handleClearPaymentWarning = () => act(async () => {
+    if (user.uid && !user.pending) {
+      await updateDoc(doc(db, 'users', user.uid), { paymentWarning: false });
+    }
+  });
+
   return (
     <>
       {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
@@ -109,6 +124,7 @@ function UserRow({ user, adminUids, onAction }) {
               {user.displayName}
               {isAdmin   && <Badge label="Admin"    color="#e8c84a" />}
               {isBlocked && <Badge label="Bloqueado" color="#f45a5a" />}
+              {user.paymentWarning && <Badge label="⚠️ Pago pendiente" color="#f97316" />}
             </div>
             <div className="admin-user-email">{user.email}</div>
           </div>
@@ -164,6 +180,11 @@ function UserRow({ user, adminUids, onAction }) {
                 <button className="admin-action-btn reset"  onClick={handleResetPts}>🔄 Resetear puntos</button>
                 <button className="admin-action-btn block"  onClick={handleBlock}>{isBlocked ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
                 <button className="admin-action-btn admin-toggle" onClick={handleMakeAdmin}>{isAdmin ? '⬇️ Quitar admin' : '⬆️ Hacer admin'}</button>
+                {!user.pending && (
+                  user.paymentWarning
+                    ? <button className="admin-action-btn payment-clear" onClick={handleClearPaymentWarning}>✅ Quitar advertencia de pago</button>
+                    : <button className="admin-action-btn payment-warn" onClick={handlePaymentWarning}>💳 Advertencia de pago</button>
+                )}
                 <button className="admin-action-btn delete" onClick={handleDelete}>🗑️ Eliminar usuario</button>
               </div>
             </div>
