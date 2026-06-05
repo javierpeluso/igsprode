@@ -3098,10 +3098,11 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   align-items: center;
   justify-content: center;
   padding: 16px;
-  pointer-events: none;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .payment-warning-banner {
-  pointer-events: all;
   display: flex;
   flex-direction: column;
   align-items: center;
