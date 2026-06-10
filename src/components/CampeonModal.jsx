@@ -4,7 +4,7 @@ import { db } from '../lib/firebase';
 import { GROUPS } from '../data/fixture';
 import { Flag } from '../data/flags';
 
-const DEADLINE = new Date('2026-06-11T18:00:00-03:00'); // primer partido
+const DEADLINE = new Date('2026-06-11T16:00:00-03:00'); // primer partido
 const isClosed = () => Date.now() >= DEADLINE.getTime();
 
 // Todos los equipos del fixture
