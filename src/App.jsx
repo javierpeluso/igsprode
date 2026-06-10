@@ -21,6 +21,7 @@ import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
 import PaymentWarningBanner from './components/PaymentWarningBanner';
+import CampeonWarningBanner from './components/CampeonWarningBanner';
 import { Analytics } from "@vercel/analytics/react"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -239,6 +240,7 @@ function AuthorizedApp({ user }) {
         </div>
       )}
       {paymentWarning && <PaymentWarningBanner key={String(paymentWarning)} />}
+      <CampeonWarningBanner user={user} onSelect={() => setShowCampeon(true)} />
       <header className="app-header">
         <div className="header-brand">
           <span className="header-logo"><img src="https://res.cloudinary.com/dzof25mgq/image/upload/v1779283704/ChatGPT_Image_20_may_2026_10_26_56_a.m._va0fay.png" alt="Logo" className="header-logo-img" /></span>

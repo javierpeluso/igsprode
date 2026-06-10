@@ -3171,3 +3171,289 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   border-color: rgba(34,197,94,0.3);
 }
 .admin-action-btn.payment-clear:hover { background: rgba(34,197,94,0.2); }
+
+/* ── Admin: section nav (Partidos / Campeón) ─────────────────────────────── */
+.admin-section-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.admin-section-btn {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--c-border2);
+  background: var(--c-surface2);
+  color: var(--c-muted);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.admin-section-btn.active {
+  background: var(--c-accent);
+  color: #fff;
+  border-color: var(--c-accent);
+}
+.admin-section-btn:hover:not(.active) {
+  background: var(--c-surface3, var(--c-surface2));
+  color: var(--c-text);
+}
+
+/* ── Admin: campeón list ─────────────────────────────────────────────────── */
+.admin-campeon-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.admin-campeon-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+.admin-campeon-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+.admin-campeon-stat-label {
+  font-size: 11px;
+  color: var(--c-muted);
+  text-align: center;
+  margin-top: 2px;
+}
+.admin-campeon-divider {
+  width: 1px;
+  background: var(--c-border2);
+  align-self: stretch;
+  margin: 0 4px;
+}
+.admin-campeon-top-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 120px;
+}
+.admin-campeon-top-team-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.admin-campeon-top-team-name {
+  flex: 1;
+  color: var(--c-text);
+}
+.admin-campeon-top-team-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--c-accent);
+  min-width: 16px;
+  text-align: right;
+}
+
+.admin-campeon-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.admin-campeon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border);
+  transition: background 0.12s;
+}
+.admin-campeon-row:last-child { border-bottom: none; }
+.admin-campeon-row:hover { background: var(--c-surface3, rgba(255,255,255,0.03)); }
+.admin-campeon-row.no-pred { opacity: 0.55; }
+.admin-campeon-team {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+}
+.admin-campeon-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.admin-campeon-pending {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--c-muted);
+  font-style: italic;
+}
+
+/* ── Cartel de advertencia: campeón no seleccionado ────────────────────── */
+.campeon-warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(232,200,74,0.18) 0%, rgba(232,200,74,0.08) 100%);
+  border: 1px solid var(--c-accent);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 0 0 14px;
+  animation: campeon-warning-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes campeon-warning-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.campeon-warning-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.campeon-warning-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 180px;
+}
+.campeon-warning-text strong {
+  font-size: 14px;
+  color: var(--c-text);
+}
+.campeon-warning-countdown {
+  font-size: 12px;
+  color: var(--c-accent);
+  font-weight: 600;
+}
+.campeon-warning-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.btn-campeon-warning-later,
+.btn-campeon-warning-select {
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+.btn-campeon-warning-later {
+  background: transparent;
+  border-color: var(--c-border2);
+  color: var(--c-muted);
+}
+.btn-campeon-warning-later:hover {
+  color: var(--c-text);
+  border-color: var(--c-accent);
+}
+.btn-campeon-warning-select {
+  background: var(--c-accent);
+  color: #1a1500;
+}
+.btn-campeon-warning-select:hover {
+  filter: brightness(1.08);
+}
+@media (max-width: 600px) {
+  .campeon-warning-banner { padding: 10px 12px; }
+  .campeon-warning-actions { width: 100%; }
+  .btn-campeon-warning-later,
+  .btn-campeon-warning-select { flex: 1; }
+}
+
+/* ── Cartel grande centrado: campeón no seleccionado (al abrir la app) ── */
+.campeon-overlay-warning {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.campeon-overlay-warning-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-accent);
+  border-radius: 18px;
+  padding: 36px 28px 28px;
+  box-shadow: 0 16px 48px rgba(232,200,74,0.35), 0 4px 16px rgba(0,0,0,0.5);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  animation: campeon-overlay-warning-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes campeon-overlay-warning-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.campeon-overlay-warning-icon {
+  font-size: 52px;
+  line-height: 1;
+  animation: campeon-pulse 1.4s ease-in-out infinite;
+}
+@keyframes campeon-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.15); }
+}
+.campeon-overlay-warning-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.05em;
+  color: var(--c-text);
+  line-height: 1.25;
+  margin: 0;
+}
+.campeon-overlay-warning-sub {
+  font-size: 14px;
+  color: var(--c-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 320px;
+}
+.campeon-overlay-warning-countdown {
+  font-size: 15px;
+  color: var(--c-accent);
+  font-weight: 600;
+  background: rgba(232,200,74,0.12);
+  border: 1px solid var(--c-accent);
+  border-radius: 10px;
+  padding: 8px 16px;
+}
+.campeon-overlay-warning-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+.campeon-overlay-warning-actions .btn-campeon-warning-later,
+.campeon-overlay-warning-actions .btn-campeon-warning-select {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+@media (max-width: 400px) {
+  .campeon-overlay-warning-card { padding: 28px 20px 22px; }
+  .campeon-overlay-warning-title { font-size: 24px; }
+  .campeon-overlay-warning-icon { font-size: 44px; }
+}

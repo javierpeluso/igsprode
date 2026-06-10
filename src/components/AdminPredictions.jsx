@@ -3,6 +3,7 @@ import { collection, getDocs, getDoc, doc, updateDoc, deleteField } from 'fireba
 import { db } from '../lib/firebase';
 import { GROUPS, formatKickoff } from '../data/fixture';
 import { Flag } from '../data/flags';
+import AdminCampeon from './AdminCampeon';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -115,6 +116,7 @@ export default function AdminPredictions() {
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading]         = useState(true);
   const [activeGroup, setActiveGroup] = useState('A');
+  const [section, setSection]         = useState('partidos'); // 'partidos' | 'campeon'
 
   const fetchAll = async () => {
     setLoading(true);
@@ -154,33 +156,60 @@ export default function AdminPredictions() {
 
   return (
     <div className="tab-content">
-      <div className="admin-notice">
-        Pronósticos de todos los participantes por partido. Expandí cada partido para verlos o eliminar uno.
+      {/* Selector de sección */}
+      <div className="admin-section-nav">
+        <button
+          className={`admin-section-btn ${section === 'partidos' ? 'active' : ''}`}
+          onClick={() => setSection('partidos')}
+        >
+          ⚽ Por partido
+        </button>
+        <button
+          className={`admin-section-btn ${section === 'campeon' ? 'active' : ''}`}
+          onClick={() => setSection('campeon')}
+        >
+          🏆 Campeón
+        </button>
       </div>
 
-      <div className="group-nav">
-        {Object.keys(GROUPS).map(g => (
-          <button
-            key={g}
-            className={`group-btn ${activeGroup === g ? 'active' : ''}`}
-            onClick={() => setActiveGroup(g)}
-          >
-            Grupo {g}
-          </button>
-        ))}
-      </div>
+      {section === 'campeon' ? (
+        <>
+          <div className="admin-notice">
+            Pronóstico de campeón de cada participante. Los que aún no eligieron aparecen al final.
+          </div>
+          <AdminCampeon />
+        </>
+      ) : (
+        <>
+          <div className="admin-notice">
+            Pronósticos de todos los participantes por partido. Expandí cada partido para verlos o eliminar uno.
+          </div>
 
-      <div className="admin-pred-matches">
-        {GROUPS[activeGroup].matches.map(match => (
-          <MatchPredRow
-            key={match.id}
-            match={match}
-            users={users}
-            predictions={predictions}
-            onDeletePrediction={handleDeletePrediction}
-          />
-        ))}
-      </div>
+          <div className="group-nav">
+            {Object.keys(GROUPS).map(g => (
+              <button
+                key={g}
+                className={`group-btn ${activeGroup === g ? 'active' : ''}`}
+                onClick={() => setActiveGroup(g)}
+              >
+                Grupo {g}
+              </button>
+            ))}
+          </div>
+
+          <div className="admin-pred-matches">
+            {GROUPS[activeGroup].matches.map(match => (
+              <MatchPredRow
+                key={match.id}
+                match={match}
+                users={users}
+                predictions={predictions}
+                onDeletePrediction={handleDeletePrediction}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
