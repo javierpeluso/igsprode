@@ -30,6 +30,7 @@ function formatTimeLeft(timeLeft) {
  * – Al cerrarlo (o elegir "Más tarde") queda solo el banner arriba, como antes.
  * – Cuenta regresiva en vivo hasta que se bloquea la opción.
  * – "Elegir campeón" abre el modal CampeonModal.
+ * – Cuando el contador llega a 0 el overlay y el banner desaparecen solos.
  */
 export default function CampeonWarningBanner({ user, onSelect }) {
   const [campeon, setCampeon] = useState(null);
@@ -48,7 +49,15 @@ export default function CampeonWarningBanner({ user, onSelect }) {
   }, [user.uid]);
 
   useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
+    const timer = setInterval(() => {
+      const t = getTimeLeft();
+      setTimeLeft(t);
+      // Cuando llega a 0, ocultar overlay y banner automáticamente
+      if (!t) {
+        setShowOverlay(false);
+        setDismissed(true);
+      }
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 

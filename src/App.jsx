@@ -20,6 +20,7 @@ import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import { useNotifications } from './hooks/useNotifications';
+import ResultsNotificationModal from './components/ResultsNotificationModal';
 import PaymentWarningBanner from './components/PaymentWarningBanner';
 import CampeonWarningBanner from './components/CampeonWarningBanner';
 import { Analytics } from "@vercel/analytics/react"
@@ -144,6 +145,17 @@ function AuthorizedApp({ user }) {
   const [showStats, setShowStats] = useState(false);
   const { unread, markRead, items } = useNotifications(user.uid);
   const [paymentWarning, setPaymentWarning] = useState(false);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+
+  // Mostrar el modal al entrar si hay resultados nuevos
+  // Solo se activa una vez por sesión (cuando hasNew pasa a true por primera vez)
+  const [modalShown, setModalShown] = useState(false);
+  useEffect(() => {
+    if (hasNew && !modalShown) {
+      setShowResultsModal(true);
+      setModalShown(true);
+    }
+  }, [hasNew, modalShown]);
 
   useEffect(() => {
     registerUser(user);
@@ -300,6 +312,19 @@ function AuthorizedApp({ user }) {
         {tab === 5 && <FeedTab currentUser={user} isAdmin={isAdmin} />}
       </main>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
+      {showResultsModal && (
+        <ResultsNotificationModal
+          onClose={() => {
+            setShowResultsModal(false);
+            markAsSeen();
+          }}
+          onGoToRanking={() => {
+            setShowResultsModal(false);
+            markAsSeen();
+            setTab(4); // Tab Ranking
+          }}
+        />
+      )}
       <Analytics />
     </div>
   );
