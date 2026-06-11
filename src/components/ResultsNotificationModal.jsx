@@ -64,7 +64,7 @@ export default function ResultsNotificationModal({ onClose, onGoToRanking }) {
             marginBottom: 6,
           }}
         >
-          El admin cargó resultados de partidos.
+          Se cargaron resultados de partidos.
         </div>
         <div
           style={{

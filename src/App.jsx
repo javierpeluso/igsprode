@@ -149,13 +149,14 @@ function AuthorizedApp({ user }) {
 
   // Mostrar el modal al entrar si hay resultados nuevos
   // Solo se activa una vez por sesión (cuando hasNew pasa a true por primera vez)
+
   const [modalShown, setModalShown] = useState(false);
   useEffect(() => {
     if (hasNew && !modalShown) {
       setShowResultsModal(true);
       setModalShown(true);
     }
-  }, [hasNew, modalShown]);
+  }, [hasNew, modalShown]);  
 
   useEffect(() => {
     registerUser(user);
