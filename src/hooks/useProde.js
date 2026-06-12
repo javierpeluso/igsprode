@@ -69,7 +69,16 @@ export function usePredictions(userId) {
     await recalcUserStats(userId, allRes);
   };
 
-  return { predictions, savePrediction };
+  // Pronóstico de fase eliminatoria: incluye penaltyWinner si el usuario
+  // pronosticó un empate en los 120min y eligió un ganador por penales.
+  const saveKnockoutPrediction = async (matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
+    const payload = { home, away, homeTeam, awayTeam };
+    if (penaltyWinner) payload.penaltyWinner = penaltyWinner;
+    else payload.penaltyWinner = null;
+    await setDoc(doc(db, 'predictions', userId), { [matchId]: payload }, { merge: true });
+  };
+
+  return { predictions, savePrediction, saveKnockoutPrediction };
 }
 
 export function useResults() {
@@ -97,7 +106,16 @@ export function useResults() {
     await recalcGlobalStats(allResults);
   };
 
-  return { results, saveResult };
+  // Resultado de fase eliminatoria: incluye opcionalmente penaltyWinner
+  // cuando el resultado en 120min terminó en empate.
+  const saveKnockoutResult = async (matchId, payload) => {
+    await setDoc(doc(db, 'results', 'all'), { [matchId]: payload }, { merge: true });
+    const snap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = snap.exists() ? snap.data() : {};
+    await markResultUpdated();
+  };
+
+  return { results, saveResult, saveKnockoutResult };
 }
 
 export function useRanking() {

@@ -3515,3 +3515,151 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   .campeon-overlay-warning-title { font-size: 24px; }
   .campeon-overlay-warning-icon { font-size: 44px; }
 }
+
+/* ── Knockout penalty selector ─────────────────────────────────────── */
+.knockout-penalty-box {
+  background: var(--c-surface2);
+  border: 1px solid var(--c-accent);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.knockout-penalty-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-accent);
+  letter-spacing: 0.02em;
+}
+.knockout-penalty-options {
+  display: flex;
+  gap: 8px;
+}
+.knockout-penalty-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--c-border2);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.knockout-penalty-btn:hover { border-color: var(--c-accent); }
+.knockout-penalty-btn.selected {
+  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 15%, var(--c-surface));
+  font-weight: 700;
+  color: var(--c-accent);
+}
+.knockout-penalty-warn {
+  font-size: 11px;
+  color: #e05c5c;
+}
+
+/* ─── Knockout unlock modal ──────────────────────────────────────────────── */
+.knockout-unlock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: knockout-overlay-in 0.3s ease;
+}
+@keyframes knockout-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.knockout-unlock-modal {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 32px 36px;
+  text-align: center;
+  animation: knockout-modal-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes knockout-modal-in {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.knockout-unlock-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+  animation: trophy-float 3s ease-in-out infinite;
+}
+.knockout-unlock-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin: 0 0 10px;
+}
+.knockout-unlock-sub {
+  font-size: 14px;
+  color: var(--c-muted);
+  line-height: 1.55;
+  margin: 0 0 28px;
+}
+.knockout-unlock-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.knockout-unlock-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 14px 8px;
+  min-width: 60px;
+}
+.knockout-unlock-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--c-text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+.knockout-unlock-label {
+  font-size: 10px;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+.knockout-unlock-sep {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--c-muted);
+  margin-bottom: 16px;
+  line-height: 1;
+}
+.knockout-unlock-date {
+  font-size: 13px;
+  color: var(--c-muted);
+  margin: 0;
+}
+@media (max-width: 400px) {
+  .knockout-unlock-modal { padding: 32px 20px 28px; }
+  .knockout-unlock-num   { font-size: 26px; }
+  .knockout-unlock-unit  { min-width: 50px; padding: 10px 10px 6px; }
+}

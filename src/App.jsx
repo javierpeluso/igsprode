@@ -15,6 +15,7 @@ import TablaTab from './components/TablaTab';
 import FeedTab from './components/FeedTab';
 import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
+import AdminKnockout from './components/AdminKnockout';
 import AdminPredictions from './components/AdminPredictions';
 import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
@@ -134,8 +135,8 @@ export default function App() {
 // ─────────────────────────────────────────────────────────────────────────────
 function AuthorizedApp({ user }) {
   const [tab, setTab] = useState(0);
-  const { predictions, savePrediction } = usePredictions(user.uid);
-  const { results, saveResult }         = useResults();
+  const { predictions, savePrediction, saveKnockoutPrediction } = usePredictions(user.uid);
+  const { results, saveResult, saveKnockoutResult } = useResults();
   const { ranking, loading: rankLoading } = useRanking();
   const { hasNew, markAsSeen } = useNewResults(user.uid);
   const { theme, toggleTheme } = useTheme();
@@ -218,7 +219,7 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Pronósticos', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
+          {['Resultados', 'Eliminatoria', 'Pronósticos', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
           <button
@@ -234,10 +235,11 @@ function AuthorizedApp({ user }) {
         </nav>
         <main className="app-main">
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
-          {adminTab === 1 && <AdminPredictions />}
-          {adminTab === 2 && <AdminUsers adminUids={ADMIN_UIDS} />}
-          {adminTab === 3 && <AdminThirds />}
-          {adminTab === 4 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
+          {adminTab === 1 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
+          {adminTab === 2 && <AdminPredictions />}
+          {adminTab === 3 && <AdminUsers adminUids={ADMIN_UIDS} />}
+          {adminTab === 4 && <AdminThirds />}
+          {adminTab === 5 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
         </main>
         <Analytics />
       </div>
@@ -300,7 +302,12 @@ function AuthorizedApp({ user }) {
           <TablaTab results={results} />
         )}
         {tab === 3 && (
-          <BracketTab results={results} isAdmin={isAdmin} />
+          <BracketTab
+            results={results}
+            isAdmin={isAdmin}
+            predictions={predictions}
+            onSaveKnockoutPrediction={saveKnockoutPrediction}
+          />
         )}
         {tab === 4 && (
           <RankingTab
