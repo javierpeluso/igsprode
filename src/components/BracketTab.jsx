@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useManualThirds } from '../hooks/useBracket';
 import KnockoutPredictions from './KnockoutPredictions';
 
-const TOTAL_THIRDS = 8;
-
 // 25 de junio de 2025 00:00:00 hora argentina (UTC-3)
 const UNLOCK_DATE = new Date('2025-06-25T03:00:00Z');
 
@@ -73,12 +71,8 @@ export default function BracketTab({ results, isAdmin, predictions, onSaveKnocko
     return () => clearInterval(timer);
   }, []);
 
-  const thirdsLoaded   = Object.keys(manualThirds).length;
-  const allThirdsReady = thirdsLoaded >= TOTAL_THIRDS;
-  const isLocked       = !isAdmin && timeLeft !== null;
-
-  // Usuarios normales: mostrar cartel si no están todos los terceros cargados
-  if (!isAdmin && !allThirdsReady && timeLeft !== null) {
+  // Usuarios no-admin: si la fecha de unlock no llegó, mostrar SOLO el modal (sin contenido debajo)
+  if (!isAdmin && timeLeft !== null) {
     return (
       <div className="tab-content">
         <KnockoutCountdownModal />
@@ -88,7 +82,6 @@ export default function BracketTab({ results, isAdmin, predictions, onSaveKnocko
 
   return (
     <div className="tab-content">
-      {isLocked && <KnockoutCountdownModal />}
       <KnockoutPredictions
         results={results}
         predictions={predictions || {}}

@@ -37,7 +37,7 @@ import { Analytics } from "@vercel/analytics/react"
 //    Firebase Console → Authentication → Users → columna User UID
 // ─────────────────────────────────────────────────────────────────────────────
 const ADMIN_UIDS = [
-  "NtYr9rClPcRoAfnTaaLNI6JYXqM2",
+  "NtYr9rClPcRoAfnTaaLNI6JYXqM2"
 ];
 
 const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
