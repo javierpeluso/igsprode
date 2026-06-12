@@ -56,7 +56,7 @@ function KnockoutCountdownModal() {
             <span className="knockout-unlock-label">seg</span>
           </div>
         </div>
-        <p className="knockout-unlock-date">📅 25 de junio · 00:00 hs (ARG)</p>
+        <p className="knockout-unlock-date">📅 29 de junio · 00:00 hs (ARG)</p>
       </div>
     </div>
   );
