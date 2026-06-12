@@ -3,7 +3,7 @@ import { useManualThirds } from '../hooks/useBracket';
 import KnockoutPredictions from './KnockoutPredictions';
 
 // 25 de junio de 2025 00:00:00 hora argentina (UTC-3)
-const UNLOCK_DATE = new Date('2025-06-25T03:00:00Z');
+const UNLOCK_DATE = new Date('2026-06-25T03:00:00Z');
 
 function getTimeLeft() {
   const diff = UNLOCK_DATE.getTime() - Date.now();
