@@ -17,6 +17,7 @@ import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
 import AdminKnockout from './components/AdminKnockout';
 import AdminPredictions from './components/AdminPredictions';
+import AdminKnockoutPredictions from './components/AdminKnockoutPredictions';
 import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
@@ -219,7 +220,7 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Eliminatoria', 'Pronósticos', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
+          {['Resultados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
           <button
@@ -237,9 +238,10 @@ function AuthorizedApp({ user }) {
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
           {adminTab === 1 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
           {adminTab === 2 && <AdminPredictions />}
-          {adminTab === 3 && <AdminUsers adminUids={ADMIN_UIDS} />}
-          {adminTab === 4 && <AdminThirds />}
-          {adminTab === 5 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
+          {adminTab === 3 && <AdminKnockoutPredictions results={results} />}
+          {adminTab === 4 && <AdminUsers adminUids={ADMIN_UIDS} />}
+          {adminTab === 5 && <AdminThirds />}
+          {adminTab === 6 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
         </main>
         <Analytics />
       </div>

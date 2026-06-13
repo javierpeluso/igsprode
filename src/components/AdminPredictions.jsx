@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, getDoc, doc, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, deleteField, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { GROUPS, formatKickoff } from '../data/fixture';
+import { GROUPS, formatKickoff, calcPoints, ALL_MATCHES } from '../data/fixture';
 import { Flag } from '../data/flags';
 import AdminCampeon from './AdminCampeon';
 
@@ -26,10 +26,99 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
-function MatchPredRow({ match, users, predictions, onDeletePrediction }) {
+// ── Modal para editar / crear un pronóstico ──────────────────────────────────
+function EditPredModal({ match, user, currentPred, onSave, onCancel }) {
+  const [home, setHome] = useState(currentPred ? String(currentPred.home) : '');
+  const [away, setAway] = useState(currentPred ? String(currentPred.away) : '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState('');
+
+  const isCreating = !currentPred;
+
+  const handleSave = async () => {
+    const h = parseInt(home, 10);
+    const a = parseInt(away, 10);
+    if (isNaN(h) || isNaN(a) || h < 0 || a < 0) {
+      setError('Ingresá números válidos (≥ 0).');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await onSave(user.uid, match.id, h, a);
+    } catch (e) {
+      setError('Error al guardar. Intentá de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="confirm-overlay" onClick={onCancel}>
+      <div className="confirm-modal admin-edit-pred-modal" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon">{isCreating ? '➕' : '✏️'}</div>
+        <div className="confirm-message" style={{ marginBottom: 4 }}>
+          <strong>{isCreating ? 'Asignar pronóstico' : 'Editar pronóstico'}</strong>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          {user.displayName} · {match.home} vs {match.away}
+        </div>
+
+        <div className="admin-edit-pred-inputs">
+          <div className="admin-edit-pred-team">
+            <Flag country={match.home} size={20} />
+            <span>{match.home}</span>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={home}
+              onChange={e => setHome(e.target.value)}
+              className="admin-edit-pred-input"
+              placeholder="0"
+              autoFocus
+            />
+          </div>
+          <span className="admin-edit-pred-separator">–</span>
+          <div className="admin-edit-pred-team">
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={away}
+              onChange={e => setAway(e.target.value)}
+              className="admin-edit-pred-input"
+              placeholder="0"
+            />
+            <Flag country={match.away} size={20} />
+            <span>{match.away}</span>
+          </div>
+        </div>
+
+        {error && <div className="admin-edit-pred-error">{error}</div>}
+
+        <div className="confirm-actions" style={{ marginTop: 16 }}>
+          <button className="confirm-btn cancel" onClick={onCancel} disabled={saving}>Cancelar</button>
+          <button
+            className="confirm-btn ok"
+            style={{ background: 'var(--accent, #3b82f6)' }}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Guardando…' : (isCreating ? 'Asignar' : 'Guardar')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+function MatchPredRow({ match, users, predictions, onDeletePrediction, onSavePrediction }) {
   const [open, setOpen] = useState(false);
-  const [confirm, setConfirm] = useState(null);
-  const [deleting, setDeleting] = useState(null); // uid being deleted
+  const [confirm, setConfirm]   = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [editing, setEditing]   = useState(null); // { uid, displayName, photoURL, pred }
 
   const preds = users.map(u => ({
     ...u,
@@ -57,6 +146,11 @@ function MatchPredRow({ match, users, predictions, onDeletePrediction }) {
     }
   };
 
+  const handleEditSave = async (uid, matchId, home, away) => {
+    await onSavePrediction(uid, matchId, home, away);
+    setEditing(null);
+  };
+
   return (
     <div className="admin-pred-match">
       <button className="admin-pred-match-header" onClick={() => setOpen(v => !v)}>
@@ -81,10 +175,23 @@ function MatchPredRow({ match, users, predictions, onDeletePrediction }) {
             <div key={uid} className={`admin-pred-row ${!pred ? 'no-pred' : ''}`}>
               <Avatar user={{ displayName, photoURL }} />
               <span className="admin-pred-name">{displayName}</span>
+
               {pred
                 ? <span className="admin-pred-score">{pred.home} – {pred.away}</span>
                 : <span className="admin-pred-missing">Sin pronóstico</span>
               }
+
+              {/* Botón editar (siempre visible) */}
+              <button
+                className="admin-pred-edit-btn"
+                title={pred ? 'Editar pronóstico' : 'Asignar pronóstico'}
+                disabled={deleting === uid}
+                onClick={() => setEditing({ uid, displayName, photoURL, pred })}
+              >
+                {pred ? '✏️' : '➕'}
+              </button>
+
+              {/* Botón eliminar (solo si tiene pronóstico) */}
               {pred && (
                 <button
                   className="admin-pred-delete-btn"
@@ -107,6 +214,16 @@ function MatchPredRow({ match, users, predictions, onDeletePrediction }) {
           onCancel={() => setConfirm(null)}
         />
       )}
+
+      {editing && (
+        <EditPredModal
+          match={match}
+          user={editing}
+          currentPred={editing.pred}
+          onSave={handleEditSave}
+          onCancel={() => setEditing(null)}
+        />
+      )}
     </div>
   );
 }
@@ -116,7 +233,7 @@ export default function AdminPredictions() {
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading]         = useState(true);
   const [activeGroup, setActiveGroup] = useState('A');
-  const [section, setSection]         = useState('partidos'); // 'partidos' | 'campeon'
+  const [section, setSection]         = useState('partidos');
 
   const fetchAll = async () => {
     setLoading(true);
@@ -135,13 +252,11 @@ export default function AdminPredictions() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  // Elimina un pronóstico específico de un usuario para un partido
+  // ── Eliminar pronóstico ───────────────────────────────────────────────────
   const handleDeletePrediction = async (uid, matchId) => {
-    // Usar deleteField() para borrar solo ese campo del documento
     await updateDoc(doc(db, 'predictions', uid), {
       [matchId]: deleteField(),
     });
-    // Actualizar estado local para reflejar el cambio de inmediato
     setPredictions(prev => {
       const updated = { ...prev };
       if (updated[uid]) {
@@ -150,6 +265,23 @@ export default function AdminPredictions() {
       }
       return updated;
     });
+  };
+
+  // ── Guardar / crear pronóstico (admin) ────────────────────────────────────
+  const handleSavePrediction = async (uid, matchId, home, away) => {
+    // setDoc con merge = true crea el doc si no existe, o actualiza el campo
+    await setDoc(doc(db, 'predictions', uid), { [matchId]: { home, away } }, { merge: true });
+
+    // Recalcular score del usuario
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+    await recalcScore(uid, allResults);
+
+    // Actualizar estado local
+    setPredictions(prev => ({
+      ...prev,
+      [uid]: { ...(prev[uid] || {}), [matchId]: { home, away } },
+    }));
   };
 
   if (loading) return <div className="empty-state">Cargando pronósticos...</div>;
@@ -182,7 +314,7 @@ export default function AdminPredictions() {
       ) : (
         <>
           <div className="admin-notice">
-            Pronósticos de todos los participantes por partido. Expandí cada partido para verlos o eliminar uno.
+            Pronósticos de todos los participantes por partido. Expandí cada partido para ver, editar (<strong>✏️</strong>) o eliminar pronósticos, y asignar uno (<strong>➕</strong>) a quien no pronosticó.
           </div>
 
           <div className="group-nav">
@@ -205,6 +337,7 @@ export default function AdminPredictions() {
                 users={users}
                 predictions={predictions}
                 onDeletePrediction={handleDeletePrediction}
+                onSavePrediction={handleSavePrediction}
               />
             ))}
           </div>
@@ -212,4 +345,38 @@ export default function AdminPredictions() {
       )}
     </div>
   );
+}
+
+// ── recalcScore (local, igual que en useProde.js) ────────────────────────────
+async function recalcScore(userId, allResults) {
+  const predSnap = await getDoc(doc(db, 'predictions', userId));
+  const preds = predSnap.exists() ? predSnap.data() : {};
+
+  let pts = 0, exact = 0, winner = 0, played = 0;
+  ALL_MATCHES.forEach((m) => {
+    const res = allResults[m.id];
+    if (!res) return;
+    played++;
+    const p = calcPoints(preds[m.id], res);
+    if (p === 3) { pts += 3; exact++; }
+    else if (p === 1) { pts += 1; winner++; }
+  });
+
+  const userSnap = await getDoc(doc(db, 'users', userId));
+  const ud = userSnap.exists() ? userSnap.data() : {};
+
+  const campeonResultSnap = await getDoc(doc(db, '_meta', 'campeonWinner'));
+  const campeonWinner = campeonResultSnap.exists() ? campeonResultSnap.data().team : null;
+  const campeonPredSnap = await getDoc(doc(db, 'campeon', userId));
+  const campeonPred = campeonPredSnap.exists() ? campeonPredSnap.data().team : null;
+  const campeonBonus = campeonWinner && campeonPred && campeonWinner === campeonPred ? 10 : 0;
+
+  await setDoc(doc(db, 'scores', userId), {
+    pts: pts + campeonBonus, exact, winner, played,
+    campeonPred: campeonPred || '',
+    campeonBonus,
+    displayName: ud.displayName || '',
+    email: ud.email || '',
+    photoURL: ud.photoURL || '',
+  });
 }

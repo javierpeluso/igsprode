@@ -2538,8 +2538,10 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
 .admin-pred-match-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .admin-pred-date { font-size: 11px; color: var(--c-muted); white-space: nowrap; }
 .admin-pred-count { font-size: 11px; white-space: nowrap; }
@@ -2555,9 +2557,11 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
 .admin-pred-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--c-border);
+  min-width: 0;
+  overflow: hidden;
 }
 .admin-pred-row:last-child { border-bottom: none; }
 .admin-pred-row.no-pred { opacity: 0.5; }
@@ -2566,14 +2570,19 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   font-size: 13px;
   color: var(--c-text);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .admin-pred-score {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
   color: var(--c-accent);
   letter-spacing: 0.04em;
-  min-width: 50px;
+  flex-shrink: 0;
   text-align: right;
+  white-space: nowrap;
 }
 .admin-pred-missing {
   font-size: 12px;
@@ -2603,6 +2612,100 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ─── Admin: botón editar pronóstico ─────────────────────────────────────── */
+.admin-pred-edit-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 3px 6px;
+  color: var(--c-muted);
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.admin-pred-edit-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+.admin-pred-edit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Admin: modal editar/crear pronóstico ───────────────────────────────── */
+.admin-edit-pred-modal {
+  max-width: min(440px, calc(100vw - 32px));
+  width: 100%;
+}
+.admin-edit-pred-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0 8px;
+  flex-wrap: wrap;
+}
+.admin-edit-pred-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 140px;
+  min-width: 0;
+}
+.admin-edit-pred-team span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.admin-edit-pred-separator {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.admin-edit-pred-input {
+  width: 52px;
+  padding: 6px 8px;
+  border: 1px solid var(--c-border, #334155);
+  border-radius: 8px;
+  background: var(--c-surface2, #1e293b);
+  color: var(--text-primary, #f1f5f9);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.admin-edit-pred-input:focus {
+  border-color: var(--accent, #3b82f6);
+}
+.admin-edit-pred-input::-webkit-inner-spin-button,
+.admin-edit-pred-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.admin-edit-pred-error {
+  color: #ef4444;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* ─── Admin: penalty tag dentro de score de eliminatoria ─────────────────── */
+.admin-pred-penalty {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+
 
 /* ─── Admin: botón publicar versión ───────────────────────────────────────── */
 .tab-btn-publish {
@@ -2778,9 +2881,10 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   padding: 24px;
-  max-width: 340px;
+  max-width: min(420px, calc(100vw - 32px));
   width: 100%;
   text-align: center;
+  box-sizing: border-box;
 }
 .confirm-icon { font-size: 36px; margin-bottom: 12px; }
 .confirm-message { font-size: 14px; color: var(--c-text); line-height: 1.6; margin-bottom: 20px; }
@@ -2799,6 +2903,82 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
 .confirm-btn.cancel:hover { color: var(--c-text); }
 .confirm-btn.ok { background: var(--c-red); border-color: var(--c-red); color: #fff; }
 .confirm-btn.ok:hover { opacity: 0.85; }
+
+
+/* ─── Admin pronósticos: responsive mobile ───────────────────────────────── */
+@media (max-width: 480px) {
+  /* Header del partido: stack teams arriba, meta abajo */
+  .admin-pred-match-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  .admin-pred-match-teams {
+    width: 100%;
+    gap: 6px;
+  }
+  .admin-pred-team {
+    font-size: 12px;
+  }
+  .admin-pred-match-meta {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  /* Fila de usuario: compactar */
+  .admin-pred-row {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .admin-pred-name {
+    font-size: 12px;
+  }
+  .admin-pred-score {
+    font-size: 16px;
+  }
+  .admin-pred-missing {
+    font-size: 11px;
+  }
+  /* Modal: inputs en columna en pantallas muy chicas */
+  .admin-edit-pred-inputs {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .admin-edit-pred-team {
+    max-width: 100%;
+    justify-content: center;
+  }
+  .admin-edit-pred-separator {
+    transform: rotate(90deg);
+    font-size: 16px;
+  }
+  .admin-edit-pred-input {
+    width: 60px;
+    font-size: 22px;
+    padding: 8px 10px;
+  }
+  /* confirm-modal padding reducido */
+  .confirm-modal {
+    padding: 18px 16px;
+  }
+  /* group-nav rondas eliminatoria: scroll horizontal */
+  .group-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+  }
+  .group-nav::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 360px) {
+  .admin-pred-match-teams { gap: 4px; }
+  .admin-pred-team { font-size: 11px; }
+  .admin-pred-match-meta { font-size: 10px; }
+  .admin-pred-date, .admin-pred-count, .admin-pred-toggle { font-size: 10px; }
+}
 
 /* ─── Usuario pendiente (pre-autorizado) ──────────────────────────────────── */
 .admin-user-card.pending {
