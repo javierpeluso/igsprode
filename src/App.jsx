@@ -6,7 +6,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import LoginPage from './components/LoginPage';
 import PronosticosTab from './components/PronosticosTab';
 import RankingTab from './components/RankingTab';
-import AdminTab from './components/AdminTab';
+import AdminTab, { AdminFinalizadosTab } from './components/AdminTab';
 import HistorialTab from './components/HistorialTab';
 import { useNewResults, useAutoRefresh, publishNewVersion } from './hooks/useNewResults';
 import { useTheme } from './hooks/useTheme';
@@ -220,7 +220,7 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
+          {['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
           <button
@@ -236,12 +236,13 @@ function AuthorizedApp({ user }) {
         </nav>
         <main className="app-main">
           {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
-          {adminTab === 1 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
-          {adminTab === 2 && <AdminPredictions />}
-          {adminTab === 3 && <AdminKnockoutPredictions results={results} />}
-          {adminTab === 4 && <AdminUsers adminUids={ADMIN_UIDS} />}
-          {adminTab === 5 && <AdminThirds />}
-          {adminTab === 6 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
+          {adminTab === 1 && <AdminFinalizadosTab results={results} onSave={saveResult} />}
+          {adminTab === 2 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
+          {adminTab === 3 && <AdminPredictions />}
+          {adminTab === 4 && <AdminKnockoutPredictions results={results} />}
+          {adminTab === 5 && <AdminUsers adminUids={ADMIN_UIDS} />}
+          {adminTab === 6 && <AdminThirds />}
+          {adminTab === 7 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
         </main>
         <Analytics />
       </div>

@@ -1,8 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { GROUPS, calcPoints } from '../data/fixture';
+import { GROUPS, ALL_MATCHES, isClosed, formatKickoff, calcPoints } from '../data/fixture';
 import { Flag } from '../data/flags';
+
+// ── Helpers de tiempo ────────────────────────────────────────────────────────
+const isLiveNow = (match) => {
+  const now     = Date.now();
+  const kickoff = new Date(match.kickoff).getTime();
+  return now >= kickoff && now <= kickoff + 140 * 60_000;
+};
+
+const isUpcoming72h = (match) => {
+  const now     = Date.now();
+  const kickoff = new Date(match.kickoff).getTime();
+  const cutoff  = kickoff - 10 * 60 * 1000;
+  return cutoff > now && kickoff <= now + 72 * 60 * 60 * 1000;
+};
+
+// Partido finalizado = ya pasaron al menos 140 min desde el kickoff
+const isFinished = (match) => {
+  const kickoff = new Date(match.kickoff).getTime();
+  return Date.now() > kickoff + 140 * 60_000;
+};
 
 // ── Avatar ───────────────────────────────────────────────────────────────────
 function Avatar({ user }) {
@@ -12,7 +32,7 @@ function Avatar({ user }) {
   return <div className="pred-avatar pred-avatar-initials">{initials}</div>;
 }
 
-// ── Panel de pronósticos para el admin (no necesita result) ──────────────────
+// ── Panel de pronósticos para el admin ──────────────────────────────────────
 function AdminAllPredictions({ match, result }) {
   const [allPreds, setAllPreds] = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -36,7 +56,6 @@ function AdminAllPredictions({ match, result }) {
           };
         })
       );
-      // Primero los que pronosticaron, luego los que no
       results.sort((a, b) => {
         if (a.prediction && !b.prediction) return -1;
         if (!a.prediction && b.prediction) return 1;
@@ -83,7 +102,7 @@ function AdminAllPredictions({ match, result }) {
 function AdminMatchRow({ match, result, onSave }) {
   const [home,     setHome]     = useState('');
   const [away,     setAway]     = useState('');
-  const [status,   setStatus]   = useState('idle'); // idle | saving | saved | error
+  const [status,   setStatus]   = useState('idle');
   const [expanded, setExpanded] = useState(false);
 
   const hasResult = !!result;
@@ -160,7 +179,6 @@ function AdminMatchRow({ match, result, onSave }) {
         </button>
       </div>
 
-      {/* Botón siempre visible para el admin — con o sin resultado */}
       <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
         {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
       </button>
@@ -169,9 +187,43 @@ function AdminMatchRow({ match, result, onSave }) {
   );
 }
 
-// ── Tab principal ─────────────────────────────────────────────────────────────
+// ── Filtros (igual que PronosticosTab) ───────────────────────────────────────
+const FILTERS = [
+  { key: 'live',     label: '🔴 En vivo' },
+  { key: 'all',      label: 'Todos' },
+  { key: 'upcoming', label: 'Próximos' },
+];
+
+// ── Tab principal: carga de resultados ───────────────────────────────────────
 export default function AdminTab({ results, onSave }) {
   const [activeGroup, setActiveGroup] = useState('A');
+  const [filter, setFilter]           = useState('all');
+  const [now, setNow]                 = useState(Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const liveMatches     = ALL_MATCHES.filter(m => isLiveNow(m));
+  const upcomingMatches = ALL_MATCHES
+    .filter(m => isUpcoming72h(m))
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+
+  const getFilteredMatches = () => {
+    if (filter === 'live')     return liveMatches;
+    if (filter === 'upcoming') return upcomingMatches;
+    return GROUPS[activeGroup].matches;
+  };
+
+  const hideGroupNav = filter === 'live' || filter === 'upcoming';
+  const filteredMatches = getFilteredMatches();
+
+  const emptyMsg = () => {
+    if (filter === 'live')     return 'No hay partidos en vivo ahora mismo';
+    if (filter === 'upcoming') return 'No hay partidos en las próximas 72 horas';
+    return 'No hay partidos en este grupo';
+  };
 
   return (
     <div className="tab-content">
@@ -185,28 +237,99 @@ export default function AdminTab({ results, onSave }) {
         <code> allow write: if request.auth != null; </code> en la colección <code>results</code>.
       </div>
 
-      <div className="group-nav">
-        {Object.keys(GROUPS).map((g) => (
-          <button
-            key={g}
-            className={`group-btn ${activeGroup === g ? 'active' : ''}`}
-            onClick={() => setActiveGroup(g)}
-          >
-            Grupo {g}
-          </button>
-        ))}
+      {/* Filtros */}
+      <div className="match-filters">
+        {FILTERS.map(f => {
+          const count =
+            f.key === 'live'     ? liveMatches.length :
+            f.key === 'upcoming' ? upcomingMatches.length : null;
+          return (
+            <button
+              key={f.key}
+              className={`filter-btn ${filter === f.key ? 'active' : ''} ${f.key === 'live' && liveMatches.length > 0 ? 'filter-btn--live' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+              {count !== null && count > 0 && (
+                <span className={`filter-badge ${f.key}`}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="admin-list">
-        {GROUPS[activeGroup].matches.map((match) => (
-          <AdminMatchRow
-            key={match.id}
-            match={match}
-            result={results[match.id]}
-            onSave={onSave}
-          />
-        ))}
+      {/* Selector de grupo */}
+      {!hideGroupNav && (
+        <div className="group-nav">
+          {Object.keys(GROUPS).map((g) => (
+            <button
+              key={g}
+              className={`group-btn ${activeGroup === g ? 'active' : ''}`}
+              onClick={() => setActiveGroup(g)}
+            >
+              Grupo {g}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Lista de partidos */}
+      {filteredMatches.length === 0 ? (
+        <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 14 }}>
+          {emptyMsg()}
+        </div>
+      ) : (
+        <div className="admin-list">
+          {filteredMatches.map((match) => (
+            <AdminMatchRow
+              key={match.id}
+              match={match}
+              result={results[match.id]}
+              onSave={onSave}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tab: Partidos Finalizados sin resultado ───────────────────────────────────
+export function AdminFinalizadosTab({ results, onSave }) {
+  // Partidos cuyo tiempo ya pasó (≥140 min post-kickoff) y NO tienen resultado cargado
+  const pendingMatches = ALL_MATCHES
+    .filter(m => isFinished(m) && !results[m.id])
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+
+  return (
+    <div className="tab-content">
+      <div className="admin-notice">
+        Partidos que ya finalizaron pero <strong>no tienen resultado cargado</strong>.
+        Cargá el resultado para que se calculen los puntos.
       </div>
+
+      {pendingMatches.length === 0 ? (
+        <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--c-muted)', fontSize: 14 }}>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>✅</div>
+          Todos los partidos finalizados tienen resultado cargado.
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: 12, paddingLeft: 4 }}>
+            {pendingMatches.length} partido{pendingMatches.length > 1 ? 's' : ''} sin resultado
+          </div>
+          <div className="admin-list">
+            {pendingMatches.map((match) => (
+              <AdminMatchRow
+                key={match.id}
+                match={match}
+                result={results[match.id]}
+                onSave={onSave}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
