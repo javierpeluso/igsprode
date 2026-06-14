@@ -241,7 +241,7 @@ function AuthorizedApp({ user }) {
           {adminTab === 3 && <AdminKnockoutPredictions results={results} />}
           {adminTab === 4 && <AdminUsers adminUids={ADMIN_UIDS} />}
           {adminTab === 5 && <AdminThirds />}
-          {adminTab === 6 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} />}
+          {adminTab === 6 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
         </main>
         <Analytics />
       </div>
@@ -317,6 +317,7 @@ function AuthorizedApp({ user }) {
             loading={rankLoading}
             currentUid={user.uid}
             currentUser={user}
+            adminUids={ADMIN_UIDS}
           />
         )}
         {tab === 5 && <FeedTab currentUser={user} isAdmin={isAdmin} />}

@@ -95,6 +95,16 @@ export function useResults() {
     await setDoc(doc(db, 'results', 'all'), { [matchId]: { home, away } }, { merge: true });
     const snap = await getDoc(doc(db, 'results', 'all'));
     const allResults = snap.exists() ? snap.data() : {};
+
+    // Guardar posiciones actuales en Firestore ANTES de recalcular
+    const scoresSnap = await getDocs(collection(db, 'scores'));
+    const currentRows = scoresSnap.docs
+      .map(d => ({ uid: d.id, ...d.data() }))
+      .sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+    const positions = {};
+    currentRows.forEach((r, i) => { positions[r.uid] = i + 1; });
+    await setDoc(doc(db, '_meta', 'rankingPositions'), positions);
+
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map((u) => recalcScore(u.id, allResults)));
     await markResultUpdated();
@@ -123,11 +133,31 @@ export function useRanking() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let prevPositions = {};
+
+    // Leer posiciones anteriores de Firestore una sola vez al montar
+    getDoc(doc(db, '_meta', 'rankingPositions'))
+      .then(snap => { if (snap.exists()) prevPositions = snap.data(); })
+      .catch(() => {});
+
     const unsub = onSnapshot(collection(db, 'scores'), (snap) => {
       const rows = snap.docs
         .map((d) => ({ uid: d.id, ...d.data() }))
         .sort((a, b) => b.pts - a.pts || b.exact - a.exact);
-      setRanking(rows);
+
+      const hasPrev = Object.keys(prevPositions).length > 0;
+      const rowsWithTrend = rows.map((r, i) => {
+        const curr = i + 1;
+        const old  = prevPositions[r.uid];
+        let trend = 'same';
+        if (hasPrev && old != null) {
+          if (curr < old) trend = 'up';
+          else if (curr > old) trend = 'down';
+        }
+        return { ...r, trend };
+      });
+
+      setRanking(rowsWithTrend);
       setLoading(false);
     });
     return unsub;

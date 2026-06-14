@@ -2,6 +2,12 @@ import React from 'react';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
+function TrendIcon({ trend }) {
+  if (trend === 'up')   return <span className="rank-trend rank-trend--up"   title="Subió">▲</span>;
+  if (trend === 'down') return <span className="rank-trend rank-trend--down" title="Bajó">▼</span>;
+  return                       <span className="rank-trend rank-trend--same" title="Sin cambios">—</span>;
+}
+
 function Avatar({ user }) {
   if (user.photoURL) {
     return <img src={user.photoURL} alt={user.displayName} className="rank-avatar" referrerPolicy="no-referrer" />;
@@ -11,11 +17,14 @@ function Avatar({ user }) {
   return <div className="rank-avatar rank-avatar-initials">{initials}</div>;
 }
 
-export default function RankingTab({ ranking, loading, currentUid }) {
+export default function RankingTab({ ranking, loading, currentUid, adminUids = [] }) {
   if (loading) {
     return <div className="empty-state">Calculando ranking...</div>;
   }
-  if (!ranking.length) {
+
+  const filteredRanking = ranking.filter(entry => !adminUids.includes(entry.uid));
+
+  if (!filteredRanking.length) {
     return <div className="empty-state">Aún no hay participantes</div>;
   }
 
@@ -28,7 +37,7 @@ export default function RankingTab({ ranking, loading, currentUid }) {
       </div>
 
       <div className="ranking-list">
-        {ranking.map((entry, idx) => (
+        {filteredRanking.map((entry, idx) => (
           <div
             key={entry.uid}
             className={`rank-row ${entry.uid === currentUid ? 'is-me' : ''}`}
@@ -41,6 +50,7 @@ export default function RankingTab({ ranking, loading, currentUid }) {
               <div className="rank-name">
                 {entry.displayName || entry.email}
                 {entry.uid === currentUid && <span className="you-badge">vos</span>}
+                <TrendIcon trend={entry.trend} />
               </div>
               <div className="rank-stats">
                 {entry.exact} exactos · {entry.winner} ganador · {entry.played} jugados

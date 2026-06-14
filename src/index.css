@@ -461,6 +461,15 @@ img { display: block; }
   border-radius: 10px;
   font-weight: 600;
 }
+.rank-trend {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.rank-trend--up   { color: #22c55e; }
+.rank-trend--down { color: #ef4444; }
+.rank-trend--same { color: #6b7280; }
 .rank-stats { font-size: 12px; color: var(--c-muted); margin-top: 2px; }
 
 .rank-pts {
@@ -650,9 +659,78 @@ img { display: block; }
 }
 
 /* ─── Match card estados ──────────────────────────────────────────────────── */
-.match-card.has-pred  { border-color: rgba(62,207,114,0.3); }
-.match-card.is-closed { opacity: 0.75; }
-.match-card.has-result { border-color: rgba(22,196,106,0.25); }
+.match-card.has-pred    { border-color: rgba(62,207,114,0.3); }
+.match-card.is-closed   { opacity: 0.75; }
+.match-card.has-result  { border-color: rgba(22,196,106,0.25); }
+.match-card.is-live     {
+  opacity: 1;
+  border-color: rgba(225,20,31,0.6);
+  box-shadow: 0 0 0 1px rgba(225,20,31,0.15);
+  animation: card-live-pulse 2.5s ease-in-out infinite;
+}
+.match-card.is-halftime { border-color: rgba(198,221,0,0.4); animation: none; }
+
+@keyframes card-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(225,20,31,0.1); }
+  50%       { box-shadow: 0 0 0 3px rgba(225,20,31,0.25); }
+}
+
+/* ─── Live chip (minuto del partido) ─────────────────────────────────────── */
+.live-chip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-accent);
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(22,196,106,0.12);
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.live-chip .live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--c-red);
+  animation: dot-blink 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+.live-chip--ht {
+  color: var(--c-winner);
+  background: rgba(198,221,0,0.12);
+}
+.live-chip--done {
+  color: var(--c-muted);
+  background: rgba(255,255,255,0.06);
+}
+
+.finished-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+}
+
+/* ─── Live / final score display ─────────────────────────────────────────── */
+.live-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--c-red);
+  letter-spacing: 0.05em;
+}
+.live-score--final {
+  color: var(--c-muted);
+  font-size: 28px;
+}
 
 .saved-chip {
   font-size: 11px; font-weight: 600;
@@ -1166,6 +1244,23 @@ img { display: block; }
 .filter-badge.pending  { background: rgba(244,90,90,0.15); color: var(--c-red); }
 .filter-badge.closed   { background: rgba(255,255,255,0.08); color: var(--c-muted); }
 .filter-badge.upcoming { background: rgba(74,190,130,0.18); color: #4abc82; }
+.filter-badge.live     { background: rgba(225,20,31,0.15); color: var(--c-red); }
+
+/* Botón En vivo — pulsa cuando hay partidos activos */
+.filter-btn--live {
+  border-color: rgba(225,20,31,0.4);
+  color: var(--c-red);
+}
+.filter-btn--live.active {
+  background: rgba(225,20,31,0.12);
+  border-color: var(--c-red);
+  color: var(--c-red);
+  animation: live-btn-pulse 2s ease-in-out infinite;
+}
+@keyframes live-btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225,20,31,0); }
+  50%       { box-shadow: 0 0 0 4px rgba(225,20,31,0.2); }
+}
 
 /* ─── Theme toggle ────────────────────────────────────────────────────────── */
 .btn-theme {
@@ -3842,4 +3937,259 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   .knockout-unlock-modal { padding: 32px 20px 28px; }
   .knockout-unlock-num   { font-size: 26px; }
   .knockout-unlock-unit  { min-width: 50px; padding: 10px 10px 6px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LiveMatchCard  (.lmc-*)
+   Card de partido en vivo — completamente separada de .match-card
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.lmc-card {
+  background: var(--c-surface);
+  border: 1.5px solid rgba(255, 60, 60, 0.35);
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: lmc-pulse-border 2.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+.lmc-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,50,50,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.lmc-card--ht  { border-color: rgba(198,221,0,0.4); animation: none; }
+.lmc-card--done { border-color: rgba(22,196,106,0.3); animation: none; }
+
+@keyframes lmc-pulse-border {
+  0%, 100% { border-color: rgba(255,60,60,0.35); }
+  50%       { border-color: rgba(255,60,60,0.7);  }
+}
+
+/* ── Header ── */
+.lmc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.lmc-date {
+  font-size: 11px;
+  color: var(--c-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Chip en vivo ── */
+.lmc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ff4444;
+  background: rgba(255,60,60,0.12);
+  border: 1px solid rgba(255,60,60,0.3);
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-variant-numeric: tabular-nums;
+}
+.lmc-chip--ht   { color: #c6dd00; background: rgba(198,221,0,0.1); border-color: rgba(198,221,0,0.3); }
+.lmc-chip--done { color: var(--c-green); background: rgba(22,196,106,0.1); border-color: rgba(22,196,106,0.3); }
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4444;
+  display: inline-block;
+  animation: live-blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* ── Fila del marcador ── */
+.lmc-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.lmc-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.lmc-team--home { justify-content: flex-start; }
+.lmc-team--away { justify-content: flex-end; }
+.lmc-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  line-height: 1.2;
+}
+.lmc-scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  letter-spacing: -1px;
+  flex-shrink: 0;
+}
+.lmc-scoreboard--final { color: var(--c-green); }
+.lmc-score-sep {
+  font-size: 24px;
+  color: var(--c-muted);
+  font-weight: 400;
+}
+
+/* ── Venue ── */
+.lmc-venue {
+  font-size: 11px;
+  color: var(--c-muted);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* ── Pronóstico ── */
+.lmc-pred {
+  font-size: 12px;
+  color: var(--c-muted);
+  text-align: center;
+  margin-bottom: 10px;
+}
+.lmc-pred strong { color: var(--c-text); }
+.lmc-pred--none { opacity: 0.6; }
+
+/* ── Divider ── */
+.lmc-divider {
+  height: 1px;
+  background: var(--c-border);
+  margin: 4px 0 10px;
+}
+
+/* ── Sección título ── */
+.lmc-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* ── Timeline de eventos ── */
+.lmc-no-events {
+  font-size: 12px;
+  color: var(--c-muted);
+  text-align: center;
+  padding: 6px 0 4px;
+  opacity: 0.7;
+}
+.lmc-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.lmc-event {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: var(--c-surface2);
+}
+.lmc-event--home { flex-direction: row; }
+.lmc-event--away { flex-direction: row-reverse; }
+.lmc-event-clock {
+  font-size: 10.5px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 26px;
+  flex-shrink: 0;
+}
+.lmc-event--away .lmc-event-clock { text-align: right; }
+.lmc-event-icon { font-size: 13px; flex-shrink: 0; }
+.lmc-event-text {
+  flex: 1;
+  color: var(--c-text);
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lmc-event--goal .lmc-event-text { font-weight: 500; }
+
+/* ── Toggle estadísticas ── */
+.lmc-toggle-btn {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  color: var(--c-muted);
+  font-size: 12px;
+  padding: 7px 12px;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 4px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lmc-toggle-btn:hover { border-color: var(--c-border2); color: var(--c-text); }
+
+/* ── Estadísticas del partido ── */
+.lmc-stats {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lmc-stats-teams {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-text);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+.lmc-stats-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 2px;
+}
+.lmc-stats-val {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+.lmc-stats-val--home { text-align: left; }
+.lmc-stats-val--away { text-align: right; }
+.lmc-stats-label {
+  font-size: 10.5px;
+  color: var(--c-muted);
+  text-align: center;
+}
+
+@media (max-width: 380px) {
+  .lmc-scoreboard { font-size: 28px; }
+  .lmc-team-name  { font-size: 12px; }
 }

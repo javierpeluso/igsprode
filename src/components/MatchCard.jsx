@@ -6,15 +6,15 @@ import MatchPredictions from './MatchPredictions';
 import MatchStats from './MatchStats';
 
 export default function MatchCard({ match, prediction, result, onSave, currentUid }) {
-  const [home, setHome] = useState('');
-  const [away, setAway] = useState('');
-  const [dirty, setDirty]   = useState(false);
+  const [home,   setHome]   = useState('');
+  const [away,   setAway]   = useState('');
+  const [dirty,  setDirty]  = useState(false);
   const [status, setStatus] = useState('idle');
-
   const [expanded, setExpanded] = useState(false);
-  const closed = isClosed(match);
+
+  const closed    = isClosed(match);
   const hasResult = !!result;
-  const pts = calcPoints(prediction, result);
+  const pts       = calcPoints(prediction, result);
 
   useEffect(() => {
     if (prediction) {
@@ -46,7 +46,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
     }
   };
 
-  // ── Con resultado ya cargado ─────────────────────────────────────────────
+  // ── Con resultado oficial cargado ────────────────────────────────────────────
   if (hasResult) {
     return (
       <div className="match-card has-result">
@@ -71,9 +71,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
           <span className="team away"><Flag country={match.away} />{match.away}</span>
         </div>
         {prediction && (
-          <div className="my-pred">
-            Tu pronóstico: {prediction.home} – {prediction.away}
-          </div>
+          <div className="my-pred">Tu pronóstico: {prediction.home} – {prediction.away}</div>
         )}
         <MatchStats match={match} />
         <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
@@ -84,7 +82,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
     );
   }
 
-  // ── Cerrado (menos de 2hs para el partido) ───────────────────────────────
+  // ── Cerrado (pronóstico bloqueado) ──────────────────────────────────────────
   if (closed) {
     return (
       <div className="match-card is-closed">
@@ -111,7 +109,7 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
     );
   }
 
-  // ── Abierto: formulario con botón guardar ────────────────────────────────
+  // ── Abierto: formulario ──────────────────────────────────────────────────────
   const hasPred = prediction !== undefined && prediction !== null;
   const canSave = home !== '' && away !== '' && dirty;
 
@@ -160,8 +158,8 @@ export default function MatchCard({ match, prediction, result, onSave, currentUi
           disabled={!canSave || status === 'saving'}
         >
           {status === 'saving' ? 'Guardando...'
-            : status === 'saved' ? '✓ Guardado'
-            : status === 'error' ? 'Error, reintentá'
+            : status === 'saved'  ? '✓ Guardado'
+            : status === 'error'  ? 'Error, reintentá'
             : hasPred ? 'Actualizar pronóstico'
             : 'Enviar pronóstico'}
         </button>
