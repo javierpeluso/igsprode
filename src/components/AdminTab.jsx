@@ -1,17 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { GROUPS } from '../data/fixture';
+import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { GROUPS, calcPoints } from '../data/fixture';
 import { Flag } from '../data/flags';
-import MatchPredictions from './MatchPredictions';
 
+// ── Avatar ───────────────────────────────────────────────────────────────────
+function Avatar({ user }) {
+  if (user.photoURL)
+    return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
+  const initials = (user.displayName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  return <div className="pred-avatar pred-avatar-initials">{initials}</div>;
+}
+
+// ── Panel de pronósticos para el admin (no necesita result) ──────────────────
+function AdminAllPredictions({ match, result }) {
+  const [allPreds, setAllPreds] = useState([]);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchAll = async () => {
+      setLoading(true);
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const results = await Promise.all(
+        usersSnap.docs.map(async (userDoc) => {
+          const uid      = userDoc.id;
+          const userData = userDoc.data();
+          const predSnap = await getDoc(doc(db, 'predictions', uid));
+          const preds    = predSnap.exists() ? predSnap.data() : {};
+          return {
+            uid,
+            displayName: userData.displayName || userData.email,
+            photoURL:    userData.photoURL,
+            prediction:  preds[match.id] || null,
+          };
+        })
+      );
+      // Primero los que pronosticaron, luego los que no
+      results.sort((a, b) => {
+        if (a.prediction && !b.prediction) return -1;
+        if (!a.prediction && b.prediction) return 1;
+        return (a.displayName || '').localeCompare(b.displayName || '');
+      });
+      if (!cancelled) { setAllPreds(results); setLoading(false); }
+    };
+    fetchAll();
+    return () => { cancelled = true; };
+  }, [match.id]);
+
+  if (loading) return <div className="preds-loading">Cargando pronósticos...</div>;
+
+  return (
+    <div className="match-predictions">
+      <div className="preds-title">Pronósticos de todos</div>
+      <div className="preds-list">
+        {allPreds.map(({ uid, displayName, photoURL, prediction }) => {
+          const pts = result ? calcPoints(prediction, result) : null;
+          return (
+            <div key={uid} className="pred-row">
+              <Avatar user={{ displayName, photoURL }} />
+              <span className="pred-name">{displayName}</span>
+              <span className="pred-score">
+                {prediction
+                  ? `${prediction.home} – ${prediction.away}`
+                  : <span className="pred-none">Sin pronóstico</span>
+                }
+              </span>
+              {result && (
+                <span className={`pred-pts ${pts === 3 ? 'exact' : pts === 1 ? 'winner' : pts === 0 ? 'miss' : 'no-pred'}`}>
+                  {pts === 3 ? '⚡ +3' : pts === 1 ? '✓ +1' : pts === 0 ? '✗ 0' : '–'}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Fila de partido ───────────────────────────────────────────────────────────
 function AdminMatchRow({ match, result, onSave }) {
-  const [home, setHome] = useState('');
-  const [away, setAway] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | saving | saved | error
+  const [home,     setHome]     = useState('');
+  const [away,     setAway]     = useState('');
+  const [status,   setStatus]   = useState('idle'); // idle | saving | saved | error
   const [expanded, setExpanded] = useState(false);
 
   const hasResult = !!result;
 
-  // Sync cuando llegan resultados desde Firestore
   useEffect(() => {
     if (result) {
       setHome(String(result.home));
@@ -20,7 +96,7 @@ function AdminMatchRow({ match, result, onSave }) {
   }, [result]);
 
   const handleSave = async () => {
-    if (hasResult) return; // bloqueado si ya hay resultado
+    if (hasResult) return;
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (isNaN(h) || isNaN(a)) {
@@ -65,6 +141,7 @@ function AdminMatchRow({ match, result, onSave }) {
         </div>
         <span><Flag country={match.away} /> {match.away}</span>
       </div>
+
       <div className="admin-actions">
         <span className="admin-date">{match.date}</span>
         <button
@@ -83,19 +160,16 @@ function AdminMatchRow({ match, result, onSave }) {
         </button>
       </div>
 
-      {/* Botón "Ver pronósticos de todos" — siempre visible para el admin cuando hay resultado */}
-      {hasResult && (
-        <>
-          <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
-            {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
-          </button>
-          {expanded && <MatchPredictions match={match} result={result} currentUid={null} />}
-        </>
-      )}
+      {/* Botón siempre visible para el admin — con o sin resultado */}
+      <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
+        {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
+      </button>
+      {expanded && <AdminAllPredictions match={match} result={result} />}
     </div>
   );
 }
 
+// ── Tab principal ─────────────────────────────────────────────────────────────
 export default function AdminTab({ results, onSave }) {
   const [activeGroup, setActiveGroup] = useState('A');
 
