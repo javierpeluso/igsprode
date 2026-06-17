@@ -18,6 +18,7 @@ import AdminThirds from './components/AdminThirds';
 import AdminKnockout from './components/AdminKnockout';
 import AdminPredictions from './components/AdminPredictions';
 import AdminKnockoutPredictions from './components/AdminKnockoutPredictions';
+import AdminPredictionHistory from './components/AdminPredictionHistory';
 import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
@@ -136,7 +137,7 @@ export default function App() {
 // ─────────────────────────────────────────────────────────────────────────────
 function AuthorizedApp({ user }) {
   const [tab, setTab] = useState(0);
-  const { predictions, savePrediction, saveKnockoutPrediction } = usePredictions(user.uid);
+  const { predictions, savePrediction, saveKnockoutPrediction } = usePredictions(user);
   const { results, saveResult, saveKnockoutResult } = useResults();
   const { ranking, loading: rankLoading } = useRanking();
   const { hasNew, markAsSeen } = useNewResults(user.uid);
@@ -220,7 +221,7 @@ function AuthorizedApp({ user }) {
           </div>
         </header>
         <nav className="tab-nav">
-          {['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
+          {['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Historial', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
             <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
           ))}
           <button
@@ -240,9 +241,10 @@ function AuthorizedApp({ user }) {
           {adminTab === 2 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
           {adminTab === 3 && <AdminPredictions />}
           {adminTab === 4 && <AdminKnockoutPredictions results={results} />}
-          {adminTab === 5 && <AdminUsers adminUids={ADMIN_UIDS} />}
-          {adminTab === 6 && <AdminThirds />}
-          {adminTab === 7 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
+          {adminTab === 5 && <AdminPredictionHistory />}
+          {adminTab === 6 && <AdminUsers adminUids={ADMIN_UIDS} />}
+          {adminTab === 7 && <AdminThirds />}
+          {adminTab === 8 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
         </main>
         <Analytics />
       </div>

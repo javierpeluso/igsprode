@@ -4193,3 +4193,99 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   .lmc-scoreboard { font-size: 28px; }
   .lmc-team-name  { font-size: 12px; }
 }
+
+/* ─── Admin Historial de Pronósticos ─────────────────────────────────────── */
+.predhist-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.predhist-stat {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 12px 8px;
+  text-align: center;
+}
+.predhist-stat-val {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  color: var(--c-accent);
+  line-height: 1;
+}
+.predhist-stat-label { font-size: 11px; color: var(--c-muted); }
+
+.predhist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.predhist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.predhist-row:hover { border-color: var(--c-border2); }
+
+.predhist-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.predhist-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.predhist-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.predhist-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.predhist-badge.type-create { background: rgba(22,196,106,0.14); color: var(--c-accent); border: 1px solid rgba(22,196,106,0.3); }
+.predhist-badge.type-update { background: rgba(198,221,0,0.14); color: var(--c-winner); border: 1px solid rgba(198,221,0,0.3); }
+.predhist-badge.type-delete { background: rgba(225,20,31,0.12); color: var(--c-red); border: 1px solid rgba(225,20,31,0.3); }
+.predhist-badge.source-user  { background: var(--c-surface2); color: var(--c-muted); border: 1px solid var(--c-border2); }
+.predhist-badge.source-admin { background: rgba(106,47,232,0.14); color: var(--c-blue); border: 1px solid rgba(106,47,232,0.3); }
+
+.predhist-match { font-size: 12px; color: var(--c-muted); }
+
+.predhist-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.predhist-score-old { color: var(--c-muted); text-decoration: line-through; opacity: 0.85; }
+.predhist-score-new { color: var(--c-text); }
+.predhist-arrow { color: var(--c-accent); font-weight: 400; }
+
+.predhist-time { font-size: 11px; color: var(--c-muted); margin-top: 2px; }
+
+@media (max-width: 480px) {
+  .predhist-summary { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .predhist-stat { padding: 10px 4px; }
+  .predhist-stat-val { font-size: 20px; }
+  .predhist-row { padding: 10px; gap: 8px; }
+  .predhist-username { font-size: 12px; }
+  .predhist-change { font-size: 13px; }
+}
+

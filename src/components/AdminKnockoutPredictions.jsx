@@ -6,6 +6,7 @@ import { db } from '../lib/firebase';
 import { Flag } from '../data/flags';
 import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
 import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
+import { logPredictionChange } from '../hooks/usePredictionHistory';
 
 // ── Rondas ───────────────────────────────────────────────────────────────────
 const ROUNDS = [
@@ -244,7 +245,7 @@ function KnockoutMatchPredRow({ match, users, predictions, onSavePrediction, onD
   const pending = preds.filter(p => !p.pred).length;
 
   const handleEditSave = async (uid, matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
-    await onSavePrediction(uid, matchId, home, away, penaltyWinner, homeTeam, awayTeam);
+    await onSavePrediction(uid, matchId, home, away, penaltyWinner, homeTeam, awayTeam, match.label);
     setEditing(null);
   };
 
@@ -260,7 +261,7 @@ function KnockoutMatchPredRow({ match, users, predictions, onSavePrediction, onD
     setConfirm(null);
     setDeleting(uid);
     try {
-      await onDeletePrediction(uid, match.id);
+      await onDeletePrediction(uid, match.id, match);
     } finally {
       setDeleting(null);
     }
@@ -402,12 +403,28 @@ export default function AdminKnockoutPredictions({ results }) {
   const currentMatches = matchesByRound[activeRound] || [];
 
   // ── Guardar / crear pronóstico eliminatoria ──────────────────────────────
-  const handleSavePrediction = async (uid, matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
+  const handleSavePrediction = async (uid, matchId, home, away, penaltyWinner, homeTeam, awayTeam, roundLabel) => {
+    const previous = predictions[uid]?.[matchId] || null;
+
     const payload = { home, away, homeTeam, awayTeam };
     if (penaltyWinner) payload.penaltyWinner = penaltyWinner;
     else payload.penaltyWinner = null;
 
     await setDoc(doc(db, 'predictions', uid), { [matchId]: payload }, { merge: true });
+
+    const u = users.find(x => x.uid === uid);
+    await logPredictionChange({
+      userId: uid,
+      userName: u?.displayName,
+      userEmail: u?.email,
+      matchId,
+      matchLabel: homeTeam && awayTeam
+        ? `${roundLabel ? roundLabel + ': ' : ''}${homeTeam} vs ${awayTeam}`
+        : matchId,
+      previous,
+      current: { home, away, penaltyWinner: penaltyWinner || null },
+      source: 'admin',
+    });
 
     setPredictions(prev => ({
       ...prev,
@@ -416,8 +433,23 @@ export default function AdminKnockoutPredictions({ results }) {
   };
 
   // ── Eliminar pronóstico eliminatoria ─────────────────────────────────────
-  const handleDeletePrediction = async (uid, matchId) => {
+  const handleDeletePrediction = async (uid, matchId, match) => {
+    const previous = predictions[uid]?.[matchId] || null;
+
     await updateDoc(doc(db, 'predictions', uid), { [matchId]: deleteField() });
+
+    const u = users.find(x => x.uid === uid);
+    await logPredictionChange({
+      userId: uid,
+      userName: u?.displayName,
+      userEmail: u?.email,
+      matchId,
+      matchLabel: match ? `${match.label}: ${match.home} vs ${match.away}` : matchId,
+      previous,
+      current: null,
+      source: 'admin',
+    });
+
     setPredictions(prev => {
       const updated = { ...prev, [uid]: { ...(prev[uid] || {}) } };
       delete updated[uid][matchId];

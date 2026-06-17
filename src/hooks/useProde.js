@@ -7,6 +7,7 @@ import { calcPoints, ALL_MATCHES } from '../data/fixture';
 import { markResultUpdated } from './useNewResults';
 import { pushResultEvent, pushJoinedEvent } from './useFeed';
 import { recalcUserStats, recalcGlobalStats } from './useProfile';
+import { logPredictionChange, roundLabelFromMatchId } from './usePredictionHistory';
 
 // ── Firestore structure ──────────────────────────────────────────────────────
 // /users/{userId}           → { displayName, email, photoURL }
@@ -50,7 +51,8 @@ async function recalcScore(userId, allResults) {
   });
 }
 
-export function usePredictions(userId) {
+export function usePredictions(user) {
+  const userId = user?.uid;
   const [predictions, setPredictions] = useState({});
 
   useEffect(() => {
@@ -62,7 +64,24 @@ export function usePredictions(userId) {
   }, [userId]);
 
   const savePrediction = async (matchId, home, away) => {
+    // Capturamos el valor anterior antes de pisarlo, para el historial de cambios
+    const prevSnap = await getDoc(doc(db, 'predictions', userId));
+    const previous = prevSnap.exists() ? (prevSnap.data()[matchId] || null) : null;
+
     await setDoc(doc(db, 'predictions', userId), { [matchId]: { home, away } }, { merge: true });
+
+    const match = ALL_MATCHES.find(m => m.id === matchId);
+    await logPredictionChange({
+      userId,
+      userName: user?.displayName,
+      userEmail: user?.email,
+      matchId,
+      matchLabel: match ? `${match.home} vs ${match.away}` : matchId,
+      previous,
+      current: { home, away },
+      source: 'user',
+    });
+
     const snap = await getDoc(doc(db, 'results', 'all'));
     const allRes = snap.exists() ? snap.data() : {};
     await recalcScore(userId, allRes);
@@ -72,10 +91,25 @@ export function usePredictions(userId) {
   // Pronóstico de fase eliminatoria: incluye penaltyWinner si el usuario
   // pronosticó un empate en los 120min y eligió un ganador por penales.
   const saveKnockoutPrediction = async (matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
+    const prevSnap = await getDoc(doc(db, 'predictions', userId));
+    const previous = prevSnap.exists() ? (prevSnap.data()[matchId] || null) : null;
+
     const payload = { home, away, homeTeam, awayTeam };
     if (penaltyWinner) payload.penaltyWinner = penaltyWinner;
     else payload.penaltyWinner = null;
     await setDoc(doc(db, 'predictions', userId), { [matchId]: payload }, { merge: true });
+
+    const round = roundLabelFromMatchId(matchId);
+    await logPredictionChange({
+      userId,
+      userName: user?.displayName,
+      userEmail: user?.email,
+      matchId,
+      matchLabel: homeTeam && awayTeam ? `${round ? round + ': ' : ''}${homeTeam} vs ${awayTeam}` : matchId,
+      previous,
+      current: { home, away, penaltyWinner: penaltyWinner || null },
+      source: 'user',
+    });
   };
 
   return { predictions, savePrediction, saveKnockoutPrediction };

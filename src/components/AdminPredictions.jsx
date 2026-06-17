@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { GROUPS, formatKickoff, calcPoints, ALL_MATCHES } from '../data/fixture';
 import { Flag } from '../data/flags';
 import AdminCampeon from './AdminCampeon';
+import { logPredictionChange } from '../hooks/usePredictionHistory';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -140,14 +141,14 @@ function MatchPredRow({ match, users, predictions, onDeletePrediction, onSavePre
     setConfirm(null);
     setDeleting(uid);
     try {
-      await onDeletePrediction(uid, match.id);
+      await onDeletePrediction(uid, match.id, match);
     } finally {
       setDeleting(null);
     }
   };
 
   const handleEditSave = async (uid, matchId, home, away) => {
-    await onSavePrediction(uid, matchId, home, away);
+    await onSavePrediction(uid, matchId, home, away, match);
     setEditing(null);
   };
 
@@ -253,10 +254,25 @@ export default function AdminPredictions() {
   useEffect(() => { fetchAll(); }, []);
 
   // ── Eliminar pronóstico ───────────────────────────────────────────────────
-  const handleDeletePrediction = async (uid, matchId) => {
+  const handleDeletePrediction = async (uid, matchId, match) => {
+    const previous = predictions[uid]?.[matchId] || null;
+
     await updateDoc(doc(db, 'predictions', uid), {
       [matchId]: deleteField(),
     });
+
+    const u = users.find(x => x.uid === uid);
+    await logPredictionChange({
+      userId: uid,
+      userName: u?.displayName,
+      userEmail: u?.email,
+      matchId,
+      matchLabel: match ? `${match.home} vs ${match.away}` : matchId,
+      previous,
+      current: null,
+      source: 'admin',
+    });
+
     setPredictions(prev => {
       const updated = { ...prev };
       if (updated[uid]) {
@@ -268,9 +284,23 @@ export default function AdminPredictions() {
   };
 
   // ── Guardar / crear pronóstico (admin) ────────────────────────────────────
-  const handleSavePrediction = async (uid, matchId, home, away) => {
+  const handleSavePrediction = async (uid, matchId, home, away, match) => {
+    const previous = predictions[uid]?.[matchId] || null;
+
     // setDoc con merge = true crea el doc si no existe, o actualiza el campo
     await setDoc(doc(db, 'predictions', uid), { [matchId]: { home, away } }, { merge: true });
+
+    const u = users.find(x => x.uid === uid);
+    await logPredictionChange({
+      userId: uid,
+      userName: u?.displayName,
+      userEmail: u?.email,
+      matchId,
+      matchLabel: match ? `${match.home} vs ${match.away}` : matchId,
+      previous,
+      current: { home, away },
+      source: 'admin',
+    });
 
     // Recalcular score del usuario
     const resultsSnap = await getDoc(doc(db, 'results', 'all'));
