@@ -22,6 +22,7 @@ import AdminPredictionHistory from './components/AdminPredictionHistory';
 import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
+import AdminPlayerStats from './components/AdminPlayerStats';
 import { useNotifications } from './hooks/useNotifications';
 import ResultsNotificationModal from './components/ResultsNotificationModal';
 import PaymentWarningBanner from './components/PaymentWarningBanner';
@@ -39,7 +40,7 @@ import { Analytics } from "@vercel/analytics/react"
 //    Firebase Console → Authentication → Users → columna User UID
 // ─────────────────────────────────────────────────────────────────────────────
 const ADMIN_UIDS = [
-  "NtYr9rClPcRoAfnTaaLNI6JYXqM2"
+  "NtYr9rClPcRoAfnTaaLNI6JYXqM2" 
 ];
 
 const IS_ADMIN_ROUTE = window.location.pathname === '/admin';
@@ -146,6 +147,7 @@ function AuthorizedApp({ user }) {
   const [showCampeon, setShowCampeon] = useState(false);
   const [adminTab, setAdminTab] = useState(0);
   const [showStats, setShowStats] = useState(false);
+  const [showPlayerStats, setShowPlayerStats] = useState(false);
   const { unread, markRead, items } = useNotifications(user.uid);
   const [paymentWarning, setPaymentWarning] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
@@ -197,6 +199,14 @@ function AuthorizedApp({ user }) {
     </>
   );
 
+  // ── Vista estadísticas de jugadores (solo admins) ───────────────────────────
+  if (showPlayerStats) return (
+    <>
+      <AdminPlayerStats adminUids={ADMIN_UIDS} onBack={() => setShowPlayerStats(false)} />
+      <Analytics />
+    </>
+  );
+
   // ── Vista admin ───────────────────────────────────────────────────────────
   if (IS_ADMIN_ROUTE) {
     return (
@@ -217,7 +227,7 @@ function AuthorizedApp({ user }) {
             <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <ProfileMenu user={user} isAdmin={true} unread={0} onOpen={() => {}} onShowStats={() => {}} />
+            <ProfileMenu user={user} isAdmin={true} unread={0} onOpen={() => {}} onShowStats={() => {}} onShowPlayerStats={() => setShowPlayerStats(true)} />
           </div>
         </header>
         <nav className="tab-nav">
@@ -274,7 +284,7 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} items={items} onOpen={markRead} onShowStats={() => setShowStats(true)} />
+          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} items={items} onOpen={markRead} onShowStats={() => setShowStats(true)} onShowPlayerStats={() => setShowPlayerStats(true)} />
         </div>
       </header>
 

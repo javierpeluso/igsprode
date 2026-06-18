@@ -18,7 +18,7 @@ function MiniAvatar({ photoURL, displayName }) {
   return <div className="notif-from-avatar notif-from-initials">{initials}</div>;
 }
 
-export default function ProfileMenu({ user, isAdmin, unread = 0, items = [], onOpen, onShowStats }) {
+export default function ProfileMenu({ user, isAdmin, unread = 0, items = [], onOpen, onShowStats = () => {}, onShowPlayerStats = () => {} }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const { stats } = useUserStats(user.uid);
@@ -111,9 +111,14 @@ export default function ProfileMenu({ user, isAdmin, unread = 0, items = [], onO
 
             {/* Acciones */}
             <div className="profile-actions">
-              <button className="profile-action-btn stats" onClick={() => { setOpen(false); onShowStats(); }}>
-                📊 Ver mis estadísticas
-              </button>
+              {isAdmin
+                ? <button className="profile-action-btn stats" onClick={() => { setOpen(false); onShowPlayerStats(); }}>
+                    📊 Ver estadísticas de jugadores
+                  </button>
+                : <button className="profile-action-btn stats" onClick={() => { setOpen(false); onShowStats(); }}>
+                    📊 Ver mis estadísticas
+                  </button>
+              }
               {isAdmin && (
                 window.location.pathname === '/admin'
                   ? <button className="profile-action-btn admin" onClick={() => { window.location.href = '/'; setOpen(false); }}>
