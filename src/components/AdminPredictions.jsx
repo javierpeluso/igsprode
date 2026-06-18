@@ -5,6 +5,7 @@ import { GROUPS, formatKickoff, calcPoints, ALL_MATCHES } from '../data/fixture'
 import { Flag } from '../data/flags';
 import AdminCampeon from './AdminCampeon';
 import { logPredictionChange } from '../hooks/usePredictionHistory';
+import { recalcUserStats } from '../hooks/useProfile';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -281,6 +282,13 @@ export default function AdminPredictions() {
       }
       return updated;
     });
+
+    // Recalcular score y estadísticas: el pronóstico borrado puede haber
+    // estado sumando puntos (exacto/ganador) que ahora deben quitarse.
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+    await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
   };
 
   // ── Guardar / crear pronóstico (admin) ────────────────────────────────────
@@ -302,10 +310,11 @@ export default function AdminPredictions() {
       source: 'admin',
     });
 
-    // Recalcular score del usuario
+    // Recalcular score y estadísticas del usuario
     const resultsSnap = await getDoc(doc(db, 'results', 'all'));
     const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
     await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
 
     // Actualizar estado local
     setPredictions(prev => ({

@@ -57,6 +57,14 @@ function UserRow({ user, adminUids, onAction }) {
     const snap = await getDoc(doc(db, 'scores', user.uid));
     const cur  = snap.exists() ? snap.data().pts || 0 : 0;
     await updateDoc(doc(db, 'scores', user.uid), { pts: cur + pts });
+
+    // Mantener sincronizadas las estadísticas (stats.totalPts) con el
+    // ranking (scores.pts), ya que el panel de estadísticas usa su propio
+    // documento separado.
+    const statsSnap = await getDoc(doc(db, 'stats', user.uid));
+    const curStatsPts = statsSnap.exists() ? statsSnap.data().totalPts || 0 : 0;
+    await setDoc(doc(db, 'stats', user.uid), { totalPts: curStatsPts + pts }, { merge: true });
+
     setPtsInput('');
   });
 
