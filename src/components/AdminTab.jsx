@@ -3,6 +3,7 @@ import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { GROUPS, ALL_MATCHES, isClosed, formatKickoff, calcPoints } from '../data/fixture';
 import { Flag } from '../data/flags';
+import LiveMatchCard from './LiveMatchCard';
 
 // ── Helpers de tiempo ────────────────────────────────────────────────────────
 const isLiveNow = (match) => {
@@ -281,12 +282,19 @@ export default function AdminTab({ results, onSave }) {
       ) : (
         <div className="admin-list">
           {filteredMatches.map((match) => (
-            <AdminMatchRow
-              key={match.id}
-              match={match}
-              result={results[match.id]}
-              onSave={onSave}
-            />
+            <div key={match.id} className={filter === 'live' ? 'admin-live-item' : undefined}>
+              {filter === 'live' && (
+                <>
+                  <LiveMatchCard match={match} prediction={null} />
+                  <div className="admin-live-result-label">⚙️ Panel admin — Cargar resultado oficial</div>
+                </>
+              )}
+              <AdminMatchRow
+                match={match}
+                result={results[match.id]}
+                onSave={onSave}
+              />
+            </div>
           ))}
         </div>
       )}

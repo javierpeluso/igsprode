@@ -5,6 +5,7 @@ import { GROUPS, formatKickoff, calcPoints, ALL_MATCHES } from '../data/fixture'
 import { Flag } from '../data/flags';
 import AdminCampeon from './AdminCampeon';
 import { logPredictionChange } from '../hooks/usePredictionHistory';
+import { recalcUserStats } from '../hooks/useProfile';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -232,6 +233,7 @@ function MatchPredRow({ match, users, predictions, onDeletePrediction, onSavePre
 export default function AdminPredictions() {
   const [users, setUsers]             = useState([]);
   const [predictions, setPredictions] = useState({});
+  const [results, setResults]         = useState({});
   const [loading, setLoading]         = useState(true);
   const [activeGroup, setActiveGroup] = useState('A');
   const [section, setSection]         = useState('partidos');
@@ -248,6 +250,10 @@ export default function AdminPredictions() {
       predsMap[u.uid] = snap.exists() ? snap.data() : {};
     }));
     setPredictions(predsMap);
+
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    setResults(resultsSnap.exists() ? resultsSnap.data() : {});
+
     setLoading(false);
   };
 
@@ -281,6 +287,13 @@ export default function AdminPredictions() {
       }
       return updated;
     });
+
+    // Recalcular score y estadísticas: el pronóstico borrado puede haber
+    // estado sumando puntos (exacto/ganador) que ahora deben quitarse.
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+    await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
   };
 
   // ── Guardar / crear pronóstico (admin) ────────────────────────────────────
@@ -302,10 +315,11 @@ export default function AdminPredictions() {
       source: 'admin',
     });
 
-    // Recalcular score del usuario
+    // Recalcular score y estadísticas del usuario
     const resultsSnap = await getDoc(doc(db, 'results', 'all'));
     const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
     await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
 
     // Actualizar estado local
     setPredictions(prev => ({
@@ -360,16 +374,22 @@ export default function AdminPredictions() {
           </div>
 
           <div className="admin-pred-matches">
-            {GROUPS[activeGroup].matches.map(match => (
-              <MatchPredRow
-                key={match.id}
-                match={match}
-                users={users}
-                predictions={predictions}
-                onDeletePrediction={handleDeletePrediction}
-                onSavePrediction={handleSavePrediction}
-              />
-            ))}
+            {GROUPS[activeGroup].matches
+              .filter(match => !results[match.id])
+              .map(match => (
+                <MatchPredRow
+                  key={match.id}
+                  match={match}
+                  users={users}
+                  predictions={predictions}
+                  onDeletePrediction={handleDeletePrediction}
+                  onSavePrediction={handleSavePrediction}
+                />
+              ))
+            }
+            {GROUPS[activeGroup].matches.every(match => results[match.id]) && (
+              <div className="empty-state">Todos los partidos de este grupo ya tienen resultado.</div>
+            )}
           </div>
         </>
       )}

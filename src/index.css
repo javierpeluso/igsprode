@@ -503,6 +503,15 @@ img { display: block; }
   margin-bottom: 16px;
 }
 .admin-list { display: flex; flex-direction: column; gap: 10px; }
+.admin-live-item { display: flex; flex-direction: column; gap: 10px; }
+.admin-live-result-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-muted);
+  letter-spacing: 0.02em;
+  padding-left: 4px;
+  margin-top: 2px;
+}
 .admin-row {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -2324,48 +2333,47 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   border-top: 1px solid var(--c-border);
 }
 
-.match-stats-bars {
-  display: grid;
-  grid-template-columns: 80px 1fr 36px;
-  align-items: center;
-  gap: 6px 8px;
+.match-stats-score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
 }
-.stats-team-label {
-  font-size: 12px;
-  font-weight: 500;
+
+.stats-score-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--c-surface2);
+  border-radius: 8px;
+}
+
+.stats-score-result {
+  font-size: 15px;
+  font-weight: 700;
   color: var(--c-text);
+  min-width: 40px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.stats-score-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--c-muted);
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.stats-team-label.home { text-align: right; }
-.stats-team-label.draw { text-align: right; color: var(--c-muted); font-weight: 400; }
-.stats-team-label.away { text-align: right; }
 
-.stats-bar-wrap {
-  height: 8px;
-  background: var(--c-surface2);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.stats-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.6s ease;
-  min-width: 2px;
-}
-.stats-bar.home { background: var(--c-accent); }
-.stats-bar.draw { background: var(--c-muted); opacity: 0.5; }
-.stats-bar.away { background: var(--c-blue); }
-
-.stats-pct {
-  font-size: 12px;
+.stats-score-count {
+  font-size: 11px;
   font-weight: 600;
-  text-align: left;
+  color: var(--c-accent);
+  white-space: nowrap;
 }
-.stats-pct.home { color: var(--c-accent); }
-.stats-pct.draw { color: var(--c-muted); }
-.stats-pct.away { color: var(--c-blue); }
 
 /* ─── Página de estadísticas ──────────────────────────────────────────────── */
 .stats-page {
