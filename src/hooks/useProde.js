@@ -25,6 +25,7 @@ async function recalcScore(userId, allResults) {
   ALL_MATCHES.forEach((m) => {
     const res = allResults[m.id];
     if (!res) return;
+    if (!preds[m.id]) return; // sin pronóstico de este usuario -> no cuenta como "jugado"
     played++;
     const p = calcPoints(preds[m.id], res);
     if (p === 3) { pts += 3; exact++; }
