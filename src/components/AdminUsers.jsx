@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { recalcScore } from '../hooks/useProde';
+import { recalcUserStats, recalcGlobalStats } from '../hooks/useProfile';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -273,6 +274,8 @@ export default function AdminUsers({ adminUids }) {
       ]);
       const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
       await Promise.all(usersSnap.docs.map(u => recalcScore(u.id, allResults)));
+      await Promise.all(usersSnap.docs.map(u => recalcUserStats(u.id, allResults)));
+      await recalcGlobalStats(allResults);
       setRecalcStatus('done');
       setTimeout(() => setRecalcStatus('idle'), 2500);
       fetchUsers();

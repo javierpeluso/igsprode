@@ -20,6 +20,7 @@ import AdminPredictions from './components/AdminPredictions';
 import AdminKnockoutPredictions from './components/AdminKnockoutPredictions';
 import AdminPredictionHistory from './components/AdminPredictionHistory';
 import AdminUsers from './components/AdminUsers';
+import AdminRankingDetalle from './components/AdminRankingDetalle';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import AdminPlayerStats from './components/AdminPlayerStats';
@@ -230,7 +231,7 @@ function AuthorizedApp({ user }) {
         </header>
         <div className="app-body">
           <TabNav
-            tabs={['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Historial', 'Usuarios', 'Terceros', 'Ranking'].map(t => ({ label: t }))}
+            tabs={['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Historial', 'Usuarios', 'Terceros', 'Ranking', 'Ranking Admin'].map(t => ({ label: t }))}
             activeIndex={adminTab}
             onChange={setAdminTab}
             extra={
@@ -256,6 +257,7 @@ function AuthorizedApp({ user }) {
             {adminTab === 6 && <AdminUsers adminUids={ADMIN_UIDS} />}
             {adminTab === 7 && <AdminThirds />}
             {adminTab === 8 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
+            {adminTab === 9 && <AdminRankingDetalle adminUids={ADMIN_UIDS} />}
           </main>
         </div>
         <Analytics />

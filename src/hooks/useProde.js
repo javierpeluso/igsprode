@@ -154,6 +154,10 @@ export function useResults() {
     const snap = await getDoc(doc(db, 'results', 'all'));
     const allResults = snap.exists() ? snap.data() : {};
     await markResultUpdated();
+    const usersSnap = await getDocs(collection(db, 'users'));
+    await Promise.all(usersSnap.docs.map(u => recalcScore(u.id, allResults)));
+    await Promise.all(usersSnap.docs.map(u => recalcUserStats(u.id, allResults)));
+    await recalcGlobalStats(allResults);
   };
 
   return { results, saveResult, saveKnockoutResult };

@@ -4094,3 +4094,85 @@ body, .app, .app-header, .match-card, .rank-row, .historial-row,
   .predhist-change { font-size: 13px; }
 }
 
+
+/* ── AdminRankingDetalle ───────────────────────────────────────────────────── */
+.admin-sort-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--c-border2);
+  background: var(--c-surface2);
+  color: var(--c-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.admin-sort-btn:hover { border-color: var(--c-accent); color: var(--c-text); }
+.admin-sort-btn.active { background: var(--c-accent); color: #fff; border-color: var(--c-accent); font-weight: 600; }
+
+.admin-ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-ranking-table th {
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+  border-bottom: 1px solid var(--c-border2);
+  white-space: nowrap;
+}
+.admin-ranking-row {
+  border-bottom: 1px solid var(--c-border);
+  transition: background .12s;
+}
+.admin-ranking-row:hover { background: var(--c-surface2); }
+
+.admin-ranking-pos { text-align: center; padding: 10px 6px; min-width: 36px; font-size: 16px; }
+.rank-num { font-size: 13px; color: var(--c-muted); font-weight: 600; }
+
+.admin-ranking-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  min-width: 160px;
+}
+.admin-ranking-userinfo { display: flex; flex-direction: column; gap: 1px; }
+.admin-ranking-name  { font-size: 13px; font-weight: 600; color: var(--c-text); }
+.admin-ranking-email { font-size: 11px; color: var(--c-muted); }
+.admin-ranking-campeon { font-size: 11px; color: #facc15; }
+
+.admin-ranking-cell {
+  text-align: center;
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+.admin-ranking-val { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.admin-ranking-cell.exact  .admin-ranking-val { color: var(--c-exact, #4ade80); }
+.admin-ranking-cell.winner .admin-ranking-val { color: var(--c-winner, #facc15); }
+.admin-ranking-cell.miss   .admin-ranking-val { color: var(--c-miss, #f87171); }
+.admin-ranking-cell.pts    { font-size: 16px; }
+.admin-ranking-pts { font-size: 18px; font-weight: 800; color: var(--c-accent); font-variant-numeric: tabular-nums; }
+.admin-ranking-pct { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Mini barra de progreso (exactos / jugados) */
+.admin-ranking-bar-wrap {
+  margin-top: 4px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-border2);
+  width: 48px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.admin-ranking-bar { height: 100%; border-radius: 2px; }
+.exact-bar { background: var(--c-exact, #4ade80); }
+
+@media (max-width: 600px) {
+  .admin-ranking-table { font-size: 12px; }
+  .admin-ranking-user  { min-width: 120px; }
+  .admin-ranking-email { display: none; }
+  .admin-ranking-bar-wrap { display: none; }
+}
