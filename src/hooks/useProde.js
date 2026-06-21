@@ -5,7 +5,6 @@ import {
 import { db } from '../lib/firebase';
 import { calcPoints, ALL_MATCHES } from '../data/fixture';
 import { markResultUpdated } from './useNewResults';
-import { pushResultEvent, pushJoinedEvent } from './useFeed';
 import { recalcUserStats, recalcGlobalStats } from './useProfile';
 import { logPredictionChange, roundLabelFromMatchId } from './usePredictionHistory';
 
@@ -17,7 +16,7 @@ import { logPredictionChange, roundLabelFromMatchId } from './usePredictionHisto
 //                               displayName, email, photoURL }
 // ────────────────────────────────────────────────────────────────────────────
 
-async function recalcScore(userId, allResults) {
+export async function recalcScore(userId, allResults) {
   const predSnap = await getDoc(doc(db, 'predictions', userId));
   const preds = predSnap.exists() ? predSnap.data() : {};
 
@@ -143,9 +142,6 @@ export function useResults() {
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map((u) => recalcScore(u.id, allResults)));
     await markResultUpdated();
-    // Push feed events
-    const matchObj = ALL_MATCHES.find(m => m.id === matchId);
-    if (matchObj) await pushResultEvent(matchObj, home, away);
     // Recalc stats for all users
     await Promise.all(usersSnap.docs.map(u => recalcUserStats(u.id, allResults)));
     await recalcGlobalStats(allResults);
@@ -230,6 +226,4 @@ export async function registerUser(user) {
       photoURL: user.photoURL || '',
     });
   }
-
-  if (isNew) await pushJoinedEvent(user);
 }

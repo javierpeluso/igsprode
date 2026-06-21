@@ -12,7 +12,7 @@ import { useNewResults, useAutoRefresh, publishNewVersion } from './hooks/useNew
 import { useTheme } from './hooks/useTheme';
 import CampeonModal, { CampeonBanner } from './components/CampeonModal';
 import TablaTab from './components/TablaTab';
-import FeedTab from './components/FeedTab';
+import TabNav from './components/TabNav';
 import BracketTab from './components/BracketTab';
 import AdminThirds from './components/AdminThirds';
 import AdminKnockout from './components/AdminKnockout';
@@ -23,7 +23,6 @@ import AdminUsers from './components/AdminUsers';
 import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import AdminPlayerStats from './components/AdminPlayerStats';
-import { useNotifications } from './hooks/useNotifications';
 import ResultsNotificationModal from './components/ResultsNotificationModal';
 import PaymentWarningBanner from './components/PaymentWarningBanner';
 import CampeonWarningBanner from './components/CampeonWarningBanner';
@@ -148,7 +147,6 @@ function AuthorizedApp({ user }) {
   const [adminTab, setAdminTab] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const [showPlayerStats, setShowPlayerStats] = useState(false);
-  const { unread, markRead, items } = useNotifications(user.uid);
   const [paymentWarning, setPaymentWarning] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
 
@@ -227,35 +225,39 @@ function AuthorizedApp({ user }) {
             <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <ProfileMenu user={user} isAdmin={true} unread={0} onOpen={() => {}} onShowStats={() => {}} onShowPlayerStats={() => setShowPlayerStats(true)} />
+            <ProfileMenu user={user} isAdmin={true} onShowStats={() => {}} onShowPlayerStats={() => setShowPlayerStats(true)} />
           </div>
         </header>
-        <nav className="tab-nav">
-          {['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Historial', 'Usuarios', 'Terceros', 'Ranking'].map((t, i) => (
-            <button key={t} className={`tab-btn ${adminTab === i ? 'active' : ''}`} onClick={() => setAdminTab(i)}>{t}</button>
-          ))}
-          <button
-            className="tab-btn tab-btn-publish"
-            title="Fuerza un reload en todos los navegadores que tienen la app abierta"
-            onClick={async () => {
-              await publishNewVersion();
-              alert('✅ Versión publicada — todos los clientes recargarán en breve.');
-            }}
-          >
-            🚀 Publicar versión
-          </button>
-        </nav>
-        <main className="app-main">
-          {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
-          {adminTab === 1 && <AdminFinalizadosTab results={results} onSave={saveResult} />}
-          {adminTab === 2 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
-          {adminTab === 3 && <AdminPredictions />}
-          {adminTab === 4 && <AdminKnockoutPredictions results={results} />}
-          {adminTab === 5 && <AdminPredictionHistory />}
-          {adminTab === 6 && <AdminUsers adminUids={ADMIN_UIDS} />}
-          {adminTab === 7 && <AdminThirds />}
-          {adminTab === 8 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
-        </main>
+        <div className="app-body">
+          <TabNav
+            tabs={['Resultados', 'Finalizados', 'Eliminatoria', 'Pronósticos', 'Pron. Elim.', 'Historial', 'Usuarios', 'Terceros', 'Ranking'].map(t => ({ label: t }))}
+            activeIndex={adminTab}
+            onChange={setAdminTab}
+            extra={
+              <button
+                className="tab-btn tab-btn-publish"
+                title="Fuerza un reload en todos los navegadores que tienen la app abierta"
+                onClick={async () => {
+                  await publishNewVersion();
+                  alert('✅ Versión publicada — todos los clientes recargarán en breve.');
+                }}
+              >
+                🚀 Publicar versión
+              </button>
+            }
+          />
+          <main className="app-main">
+            {adminTab === 0 && <AdminTab results={results} onSave={saveResult} />}
+            {adminTab === 1 && <AdminFinalizadosTab results={results} onSave={saveResult} />}
+            {adminTab === 2 && <AdminKnockout results={results} onSaveKnockout={saveKnockoutResult} />}
+            {adminTab === 3 && <AdminPredictions />}
+            {adminTab === 4 && <AdminKnockoutPredictions results={results} />}
+            {adminTab === 5 && <AdminPredictionHistory />}
+            {adminTab === 6 && <AdminUsers adminUids={ADMIN_UIDS} />}
+            {adminTab === 7 && <AdminThirds />}
+            {adminTab === 8 && <RankingTab ranking={ranking} loading={rankLoading} currentUid={user.uid} adminUids={ADMIN_UIDS} />}
+          </main>
+        </div>
         <Analytics />
       </div>
     );
@@ -284,57 +286,58 @@ function AuthorizedApp({ user }) {
           <button onClick={toggleTheme} className="btn-theme" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <ProfileMenu user={user} isAdmin={isAdmin} unread={unread} items={items} onOpen={markRead} onShowStats={() => setShowStats(true)} onShowPlayerStats={() => setShowPlayerStats(true)} />
+          <ProfileMenu user={user} isAdmin={isAdmin} onShowStats={() => setShowStats(true)} onShowPlayerStats={() => setShowPlayerStats(true)} />
         </div>
       </header>
 
-      <nav className="tab-nav">
-        {['Pronósticos', 'Resultados', 'Tabla', 'Fase Eliminatoria', 'Ranking', 'Chat'].map((t, i) => (
-          <button
-            key={t}
-            className={`tab-btn ${tab === i ? 'active' : ''}`}
-            onClick={() => { setTab(i); if (t === 'Ranking') markAsSeen(); }}
-          >
-            {t}{t === 'Ranking' && hasNew && <span className="tab-badge"> </span>}
-          </button>
-        ))}
-      </nav>
+      <div className="app-body">
+        <TabNav
+          tabs={[
+            { label: 'Pronósticos' },
+            { label: 'Resultados' },
+            { label: 'Tabla' },
+            { label: 'Fase Eliminatoria' },
+            { label: 'Ranking', badge: hasNew },
+          ]}
+          activeIndex={tab}
+          onChange={(i) => { setTab(i); if (i === 4) markAsSeen(); }}
+        />
 
-      <main className="app-main">
-        {tab === 0 && (
-          <PronosticosTab
-            predictions={predictions}
-            results={results}
-            onSave={savePrediction}
-            currentUid={user.uid}
-            currentUser={user}
-          />
-        )}
-        {tab === 1 && (
-          <HistorialTab results={results} predictions={predictions} />
-        )}
-        {tab === 2 && (
-          <TablaTab results={results} />
-        )}
-        {tab === 3 && (
-          <BracketTab
-            results={results}
-            isAdmin={isAdmin}
-            predictions={predictions}
-            onSaveKnockoutPrediction={saveKnockoutPrediction}
-          />
-        )}
-        {tab === 4 && (
-          <RankingTab
-            ranking={ranking}
-            loading={rankLoading}
-            currentUid={user.uid}
-            currentUser={user}
-            adminUids={ADMIN_UIDS}
-          />
-        )}
-        {tab === 5 && <FeedTab currentUser={user} isAdmin={isAdmin} />}
-      </main>
+        <main className="app-main">
+          {tab === 0 && (
+            <PronosticosTab
+              predictions={predictions}
+              results={results}
+              onSave={savePrediction}
+              currentUid={user.uid}
+              currentUser={user}
+            />
+          )}
+          {tab === 1 && (
+            <HistorialTab results={results} predictions={predictions} />
+          )}
+          {tab === 2 && (
+            <TablaTab results={results} />
+          )}
+          {tab === 3 && (
+            <BracketTab
+              results={results}
+              isAdmin={isAdmin}
+              predictions={predictions}
+              onSaveKnockoutPrediction={saveKnockoutPrediction}
+            />
+          )}
+          {tab === 4 && (
+            <RankingTab
+              ranking={ranking}
+              loading={rankLoading}
+              currentUid={user.uid}
+              currentUser={user}
+              adminUids={ADMIN_UIDS}
+            />
+          )}
+        </main>
+      </div>
       {showCampeon && <CampeonModal user={user} onClose={() => setShowCampeon(false)} />}
       {showResultsModal && (
         <ResultsNotificationModal

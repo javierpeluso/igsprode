@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { recalcScore } from '../hooks/useProde';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -212,6 +213,7 @@ export default function AdminUsers({ adminUids }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEmail, setNewEmail]       = useState('');
   const [addStatus, setAddStatus]     = useState('idle');
+  const [recalcStatus, setRecalcStatus] = useState('idle'); // idle | running | done | error
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -258,6 +260,29 @@ export default function AdminUsers({ adminUids }) {
     } catch (e) { console.error(e); setAddStatus('error'); setTimeout(() => setAddStatus('idle'), 3000); }
   };
 
+  // Fuerza el recálculo de pts/exact/winner/played de TODOS los usuarios,
+  // sin necesidad de tocar ningún resultado. Útil después de un fix en la
+  // lógica de scoring para que los documentos /scores/{uid} ya guardados
+  // se actualicen con los valores correctos.
+  const handleRecalcAll = async () => {
+    setRecalcStatus('running');
+    try {
+      const [usersSnap, resultsSnap] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDoc(doc(db, 'results', 'all')),
+      ]);
+      const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+      await Promise.all(usersSnap.docs.map(u => recalcScore(u.id, allResults)));
+      setRecalcStatus('done');
+      setTimeout(() => setRecalcStatus('idle'), 2500);
+      fetchUsers();
+    } catch (e) {
+      console.error(e);
+      setRecalcStatus('error');
+      setTimeout(() => setRecalcStatus('idle'), 3500);
+    }
+  };
+
   const filtered = users.filter(u =>
     (u.displayName || '').toLowerCase().includes(search.toLowerCase()) ||
     (u.email || '').toLowerCase().includes(search.toLowerCase())
@@ -296,6 +321,15 @@ export default function AdminUsers({ adminUids }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+        <button
+          className={`btn-save ${recalcStatus === 'done' ? 'saved' : recalcStatus === 'error' ? 'error' : ''}`}
+          style={{ whiteSpace: 'nowrap' }}
+          onClick={handleRecalcAll}
+          disabled={recalcStatus === 'running'}
+          title="Vuelve a calcular pts/exactos/ganador/jugados de todos los usuarios a partir de sus pronósticos y los resultados oficiales"
+        >
+          {recalcStatus === 'running' ? '⏳ Recalculando...' : recalcStatus === 'done' ? '✓ Listo' : recalcStatus === 'error' ? '✗ Error' : '🔄 Recalcular ranking'}
+        </button>
         <button className="btn-save" style={{ whiteSpace: 'nowrap' }} onClick={() => setShowAddForm(v => !v)}>
           + Agregar email
         </button>
