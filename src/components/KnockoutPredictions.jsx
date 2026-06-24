@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Flag } from '../data/flags';
 import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
 import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
+import Countdown from './Countdown';
 
 // Rondas definidas en orden — mismo criterio que AdminKnockout
 const ROUNDS = [
@@ -13,9 +14,42 @@ const ROUNDS = [
   { key: 'F',   label: 'Final' },
 ];
 
-// Construye los partidos de rondas posteriores a R32 a partir de los
-// RESULTADOS OFICIALES ya cargados por el admin (mismo criterio que AdminKnockout,
-// para que los cruces que ve el usuario sean siempre los confirmados).
+// Kickoffs de rondas posteriores a R32 (horario Argentina UTC-3)
+const LATER_ROUND_KICKOFFS = {
+  'R16_M90':  '2026-07-04T14:00:00-03:00',
+  'R16_M89':  '2026-07-04T18:00:00-03:00',
+  'R16_M91':  '2026-07-05T17:00:00-03:00',
+  'R16_M92':  '2026-07-05T21:00:00-03:00',
+  'R16_M93':  '2026-07-06T16:00:00-03:00',
+  'R16_M94':  '2026-07-06T21:00:00-03:00',
+  'R16_M95':  '2026-07-07T13:00:00-03:00',
+  'R16_M96':  '2026-07-07T17:00:00-03:00',
+  'QF_M97':   '2026-07-09T17:00:00-03:00',
+  'QF_M98':   '2026-07-10T16:00:00-03:00',
+  'QF_M99':   '2026-07-11T18:00:00-03:00',
+  'QF_M100':  '2026-07-11T22:00:00-03:00',
+  'SF_M101':  '2026-07-14T16:00:00-03:00',
+  'SF_M102':  '2026-07-15T16:00:00-03:00',
+  'TP_M103':  '2026-07-18T18:00:00-03:00',
+  'F_M104':   '2026-07-19T16:00:00-03:00',
+};
+
+// Devuelve true si ya pasaron los 10 minutos previos al kickoff
+function isKnockoutClosed(kickoff) {
+  if (!kickoff) return false;
+  const cutoff = new Date(kickoff).getTime() - 10 * 60 * 1000;
+  return Date.now() >= cutoff;
+}
+
+// Formatea fecha y hora en horario Argentina
+function formatKnockoutKickoff(kickoff) {
+  if (!kickoff) return '';
+  const d = new Date(kickoff);
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' }) +
+    ' · ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) + 'hs';
+}
+
+// Construye los partidos de rondas posteriores a R32
 function buildLaterRoundMatches(knockoutResults) {
   const getWinner = (matchId) => {
     const r = knockoutResults[matchId];
@@ -37,30 +71,30 @@ function buildLaterRoundMatches(knockoutResults) {
   };
 
   const r16 = [
-    { id: 'R16_M89',  home: getWinner('R32_M73'), away: getWinner('R32_M74'), date: '4 jul',  label: '8vos M89'  },
-    { id: 'R16_M90',  home: getWinner('R32_M75'), away: getWinner('R32_M76'), date: '4 jul',  label: '8vos M90'  },
-    { id: 'R16_M91',  home: getWinner('R32_M77'), away: getWinner('R32_M78'), date: '5 jul',  label: '8vos M91'  },
-    { id: 'R16_M92',  home: getWinner('R32_M79'), away: getWinner('R32_M80'), date: '5 jul',  label: '8vos M92'  },
-    { id: 'R16_M93',  home: getWinner('R32_M81'), away: getWinner('R32_M82'), date: '6 jul',  label: '8vos M93'  },
-    { id: 'R16_M94',  home: getWinner('R32_M83'), away: getWinner('R32_M84'), date: '6 jul',  label: '8vos M94'  },
-    { id: 'R16_M95',  home: getWinner('R32_M85'), away: getWinner('R32_M86'), date: '7 jul',  label: '8vos M95'  },
-    { id: 'R16_M96',  home: getWinner('R32_M87'), away: getWinner('R32_M88'), date: '7 jul',  label: '8vos M96'  },
+    { id: 'R16_M89',  home: getWinner('R32_M73'), away: getWinner('R32_M74'), label: '8vos M89'  },
+    { id: 'R16_M90',  home: getWinner('R32_M75'), away: getWinner('R32_M76'), label: '8vos M90'  },
+    { id: 'R16_M91',  home: getWinner('R32_M77'), away: getWinner('R32_M78'), label: '8vos M91'  },
+    { id: 'R16_M92',  home: getWinner('R32_M79'), away: getWinner('R32_M80'), label: '8vos M92'  },
+    { id: 'R16_M93',  home: getWinner('R32_M81'), away: getWinner('R32_M82'), label: '8vos M93'  },
+    { id: 'R16_M94',  home: getWinner('R32_M83'), away: getWinner('R32_M84'), label: '8vos M94'  },
+    { id: 'R16_M95',  home: getWinner('R32_M85'), away: getWinner('R32_M86'), label: '8vos M95'  },
+    { id: 'R16_M96',  home: getWinner('R32_M87'), away: getWinner('R32_M88'), label: '8vos M96'  },
   ];
   const qf = [
-    { id: 'QF_M97',  home: getWinner('R16_M89'), away: getWinner('R16_M90'), date: '9 jul',  label: 'Cuartos M97'  },
-    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), date: '9 jul',  label: 'Cuartos M98'  },
-    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), date: '10 jul', label: 'Cuartos M99'  },
-    { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), date: '10 jul', label: 'Cuartos M100' },
+    { id: 'QF_M97',  home: getWinner('R16_M89'), away: getWinner('R16_M90'), label: 'Cuartos M97'  },
+    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), label: 'Cuartos M98'  },
+    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), label: 'Cuartos M99'  },
+    { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), label: 'Cuartos M100' },
   ];
   const sf = [
-    { id: 'SF_M101', home: getWinner('QF_M97'), away: getWinner('QF_M98'), date: '14 jul', label: 'Semi M101' },
-    { id: 'SF_M102', home: getWinner('QF_M99'), away: getWinner('QF_M100'), date: '15 jul', label: 'Semi M102' },
+    { id: 'SF_M101', home: getWinner('QF_M97'), away: getWinner('QF_M98'), label: 'Semi M101' },
+    { id: 'SF_M102', home: getWinner('QF_M99'), away: getWinner('QF_M100'), label: 'Semi M102' },
   ];
   const tp = [
-    { id: 'TP_M103', home: getLoser('SF_M101'), away: getLoser('SF_M102'), date: '18 jul', label: '3er Puesto' },
+    { id: 'TP_M103', home: getLoser('SF_M101'), away: getLoser('SF_M102'), label: '3er Puesto' },
   ];
   const final = [
-    { id: 'F_M104', home: getWinner('SF_M101'), away: getWinner('SF_M102'), date: '19 jul', label: 'Final' },
+    { id: 'F_M104', home: getWinner('SF_M101'), away: getWinner('SF_M102'), label: 'Final' },
   ];
   return { r16, qf, sf, tp, final };
 }
@@ -75,6 +109,9 @@ function KnockoutPredictionRow({ match, prediction, result, onSave }) {
   const [showPenalty, setShowPenalty] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState('idle');
+
+  const kickoff = match.kickoff || LATER_ROUND_KICKOFFS[match.id];
+  const closed = isKnockoutClosed(kickoff);
 
   // Sync con pronóstico guardado
   useEffect(() => {
@@ -107,6 +144,7 @@ function KnockoutPredictionRow({ match, prediction, result, onSave }) {
   const awayLabel = match.away || '?';
   const isPending = homeLabel.startsWith('G ') || homeLabel.startsWith('P ');
   const hasResult = !!result;
+  const hasPred = prediction !== undefined && prediction !== null;
 
   const handleChange = (setter) => (e) => {
     setter(e.target.value);
@@ -137,9 +175,7 @@ function KnockoutPredictionRow({ match, prediction, result, onSave }) {
     }
   };
 
-  const hasPred = prediction !== undefined && prediction !== null;
-
-  // ── Resultado oficial ya cargado: solo mostramos lo pronosticado ──────────
+  // ── Resultado oficial ya cargado ──────────────────────────────────────────
   if (hasResult) {
     return (
       <div className="admin-row" style={{ flexDirection: 'column', gap: 8 }}>
@@ -167,13 +203,104 @@ function KnockoutPredictionRow({ match, prediction, result, onSave }) {
             : 'No enviaste pronóstico'}
         </div>
         <div className="admin-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
-          <span className="admin-date">{match.label} · {match.date}</span>
+          <span className="admin-date">{match.label}{kickoff ? ' · ' + formatKnockoutKickoff(kickoff) : ''}</span>
         </div>
       </div>
     );
   }
 
-  // ── Sin resultado todavía: formulario de pronóstico ───────────────────────
+  // ── Pronóstico ya enviado y partido cerrado (10 min antes del kickoff) ────
+  if (hasPred && closed) {
+    return (
+      <div className="admin-row" style={{ flexDirection: 'column', gap: 8 }}>
+        <div className="admin-teams" style={{ width: '100%' }}>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4 }}>
+            {!isPending && <Flag country={homeLabel} />} {homeLabel}
+          </span>
+          <div className="pred-locked" style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <span>{prediction.home}</span>
+            <span className="score-sep">–</span>
+            <span>{prediction.away}</span>
+          </div>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+            {!isPending && <Flag country={awayLabel} />} {awayLabel}
+          </span>
+        </div>
+        {prediction.penaltyWinner && (
+          <div className="knockout-penalty-label" style={{ textAlign: 'center', width: '100%' }}>
+            ⚽ Penales: {prediction.penaltyWinner}
+          </div>
+        )}
+        <div className="my-pred" style={{ width: '100%', textAlign: 'center' }}>
+          🔒 Pronóstico guardado
+        </div>
+        <div className="admin-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
+          <span className="admin-date">{match.label}{kickoff ? ' · ' + formatKnockoutKickoff(kickoff) : ''}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Cerrado sin pronóstico ─────────────────────────────────────────────────
+  if (!hasPred && closed) {
+    return (
+      <div className="admin-row" style={{ flexDirection: 'column', gap: 8 }}>
+        <div className="admin-teams" style={{ width: '100%' }}>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4 }}>
+            {!isPending && <Flag country={homeLabel} />} {homeLabel}
+          </span>
+          <div className="pred-locked no-pred" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span>–</span>
+          </div>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+            {!isPending && <Flag country={awayLabel} />} {awayLabel}
+          </span>
+        </div>
+        <div className="my-pred no-pred-text" style={{ width: '100%', textAlign: 'center' }}>
+          🔒 Cerrado — no enviaste pronóstico
+        </div>
+        <div className="admin-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
+          <span className="admin-date">{match.label}{kickoff ? ' · ' + formatKnockoutKickoff(kickoff) : ''}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Sin resultado todavía y partido abierto: formulario ───────────────────
+  // En eliminatoria: si ya hay pronóstico guardado, NO se puede modificar
+  if (hasPred && !closed) {
+    return (
+      <div className="admin-row" style={{ flexDirection: 'column', gap: 8 }}>
+        <div className="admin-teams" style={{ width: '100%' }}>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4 }}>
+            {!isPending && <Flag country={homeLabel} />} {homeLabel}
+          </span>
+          <div className="pred-locked" style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <span>{prediction.home}</span>
+            <span className="score-sep">–</span>
+            <span>{prediction.away}</span>
+          </div>
+          <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+            {!isPending && <Flag country={awayLabel} />} {awayLabel}
+          </span>
+        </div>
+        {prediction.penaltyWinner && (
+          <div className="knockout-penalty-label" style={{ textAlign: 'center', width: '100%' }}>
+            ⚽ Penales: {prediction.penaltyWinner}
+          </div>
+        )}
+        <div className="my-pred" style={{ width: '100%', textAlign: 'center' }}>
+          ✓ Pronóstico enviado — no se puede modificar
+        </div>
+        <div className="admin-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <span className="admin-date">{match.label}{kickoff ? ' · ' + formatKnockoutKickoff(kickoff) : ''}</span>
+          {kickoff && <Countdown kickoff={kickoff} />}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Abierto, sin pronóstico todavía ──────────────────────────────────────
   return (
     <div className="admin-row" style={{ flexDirection: 'column', gap: 8 }}>
       <div className="admin-teams" style={{ width: '100%' }}>
@@ -234,21 +361,29 @@ function KnockoutPredictionRow({ match, prediction, result, onSave }) {
         </div>
       )}
 
+      {!isPending && (
+        <div className="my-pred no-pred-text" style={{ width: '100%', textAlign: 'center', color: 'var(--color-warning, #f59e0b)', fontSize: '0.82rem' }}>
+          ⚠️ Una vez enviado, el pronóstico no se puede modificar
+        </div>
+      )}
+
       <div className="admin-actions" style={{ width: '100%', justifyContent: 'space-between' }}>
-        <span className="admin-date">{match.label} · {match.date}</span>
-        {!isPending && (
-          <button
-            className={`btn-save ${status === 'saved' ? 'saved' : ''} ${status === 'error' ? 'error' : ''}`}
-            onClick={handleSave}
-            disabled={status === 'saving' || (!dirty && hasPred)}
-          >
-            {status === 'saving' ? 'Guardando...'
-              : status === 'saved' ? '✓ Guardado'
-              : status === 'error' ? 'Completá los datos'
-              : hasPred ? 'Actualizar pronóstico'
-              : 'Enviar pronóstico'}
-          </button>
-        )}
+        <span className="admin-date">{match.label}{kickoff ? ' · ' + formatKnockoutKickoff(kickoff) : ''}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {kickoff && <Countdown kickoff={kickoff} />}
+          {!isPending && (
+            <button
+              className={`btn-save ${status === 'saved' ? 'saved' : ''} ${status === 'error' ? 'error' : ''}`}
+              onClick={handleSave}
+              disabled={status === 'saving' || !dirty}
+            >
+              {status === 'saving' ? 'Guardando...'
+                : status === 'saved' ? '✓ Guardado'
+                : status === 'error' ? 'Completá los datos'
+                : 'Enviar pronóstico'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -288,8 +423,8 @@ export default function KnockoutPredictions({ results, predictions, onSaveKnocko
     <div className="tab-content">
       <div className="admin-notice">
         Pronosticá la fase eliminatoria teniendo en cuenta los 120 minutos de juego. Si tu pronóstico
-        termina en empate, vas a poder elegir quién pasa de ronda por penales. Podés pronosticar
-        hasta que el admin cargue el resultado oficial del partido.
+        termina en empate, vas a poder elegir quién pasa de ronda por penales. El pronóstico se cierra
+        10 minutos antes del partido y <strong>no se puede modificar una vez enviado</strong>.
       </div>
 
       <div className="group-nav" style={{ flexWrap: 'wrap' }}>
