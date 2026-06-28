@@ -3,6 +3,16 @@ import { doc, onSnapshot, setDoc, getDoc, collection, getDocs } from 'firebase/f
 import { db } from '../lib/firebase';
 import { calcPoints, ALL_MATCHES, GROUPS } from '../data/fixture';
 
+// IDs de todos los partidos eliminatorios — debe coincidir con useProde.js
+const KNOCKOUT_MATCH_IDS = [
+  'R32_M73','R32_M74','R32_M75','R32_M76','R32_M77','R32_M78','R32_M79','R32_M80',
+  'R32_M81','R32_M82','R32_M83','R32_M84','R32_M85','R32_M86','R32_M87','R32_M88',
+  'R16_M89','R16_M90','R16_M91','R16_M92','R16_M93','R16_M94','R16_M95','R16_M96',
+  'QF_M97','QF_M98','QF_M99','QF_M100',
+  'SF_M101','SF_M102',
+  'TP_M103','F_M104',
+];
+
 // Calcula y guarda las estadísticas del usuario en /stats/{userId}
 export async function recalcUserStats(userId, allResults) {
   const predSnap = await getDoc(doc(db, 'predictions', userId));
@@ -13,15 +23,24 @@ export async function recalcUserStats(userId, allResults) {
   let currentWin = 0, currentLoss = 0;
   const teamStats = {}; // { team: { correct, total } }
 
+  // ── Fase de grupos ──────────────────────────────────────────────────────────
   // Solo partidos con resultado, ordenados por fecha
-  const played = ALL_MATCHES
+  const groupPlayed = ALL_MATCHES
     .filter(m => allResults[m.id])
     .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+
+  // ── Fase eliminatoria ───────────────────────────────────────────────────────
+  const knockoutPlayed = KNOCKOUT_MATCH_IDS
+    .filter(id => allResults[id])
+    .map(id => ({ id, isKnockout: true }));
+
+  // Procesamos grupos primero (cronológico), luego eliminatoria en orden
+  const allPlayed = [...groupPlayed, ...knockoutPlayed];
 
   let totalPts = 0;
   let globalCorrect = 0;
 
-  played.forEach(m => {
+  allPlayed.forEach(m => {
     const res = allResults[m.id];
     const pred = preds[m.id];
     const pts = calcPoints(pred, res);
@@ -35,15 +54,25 @@ export async function recalcUserStats(userId, allResults) {
     bestStreak  = Math.max(bestStreak, currentWin);
     worstStreak = Math.max(worstStreak, currentLoss);
 
-    // Stats por equipo
-    [m.home, m.away].forEach(team => {
-      if (!teamStats[team]) teamStats[team] = { correct: 0, total: 0 };
-      if (pred) {
-        teamStats[team].total++;
-        if (pts >= 1) teamStats[team].correct++;
-      }
-    });
+    // Stats por equipo (solo grupos — los knockout no tienen nombre fijo en el fixture)
+    if (!m.isKnockout) {
+      [m.home, m.away].forEach(team => {
+        if (!teamStats[team]) teamStats[team] = { correct: 0, total: 0 };
+        if (pred) {
+          teamStats[team].total++;
+          if (pts >= 1) teamStats[team].correct++;
+        }
+      });
+    }
   });
+
+  // ── Bonus campeón ───────────────────────────────────────────────────────────
+  const campeonResultSnap = await getDoc(doc(db, '_meta', 'campeonWinner'));
+  const campeonWinner = campeonResultSnap.exists() ? campeonResultSnap.data().team : null;
+  const campeonPredSnap = await getDoc(doc(db, 'campeon', userId));
+  const campeonPred = campeonPredSnap.exists() ? campeonPredSnap.data().team : null;
+  const campeonBonus = campeonWinner && campeonPred && campeonWinner === campeonPred ? 10 : 0;
+  totalPts += campeonBonus;
 
   currentStreak = currentWin > 0 ? currentWin : -currentLoss;
 
@@ -54,7 +83,7 @@ export async function recalcUserStats(userId, allResults) {
     .slice(0, 3)
     .map(([team, s]) => ({ team, pct: Math.round((s.correct / s.total) * 100), total: s.total }));
 
-  const totalPlayed = played.length;
+  const totalPlayed = allPlayed.length;
   const predSent = exact + winner + miss;
   const pctExact  = predSent > 0 ? Math.round((exact / predSent)  * 100) : 0;
   const pctWinner = predSent > 0 ? Math.round((winner / predSent) * 100) : 0;

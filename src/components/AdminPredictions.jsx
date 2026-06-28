@@ -6,6 +6,7 @@ import { Flag } from '../data/flags';
 import AdminCampeon from './AdminCampeon';
 import { logPredictionChange } from '../hooks/usePredictionHistory';
 import { recalcUserStats } from '../hooks/useProfile';
+import { recalcScore } from '../hooks/useProde';
 
 function Avatar({ user }) {
   if (user.photoURL) return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
@@ -395,39 +396,4 @@ export default function AdminPredictions() {
       )}
     </div>
   );
-}
-
-// ── recalcScore (local, igual que en useProde.js) ────────────────────────────
-async function recalcScore(userId, allResults) {
-  const predSnap = await getDoc(doc(db, 'predictions', userId));
-  const preds = predSnap.exists() ? predSnap.data() : {};
-
-  let pts = 0, exact = 0, winner = 0, played = 0;
-  ALL_MATCHES.forEach((m) => {
-    const res = allResults[m.id];
-    if (!res) return;
-    if (!preds[m.id]) return; // sin pronóstico de este usuario -> no cuenta como "jugado"
-    played++;
-    const p = calcPoints(preds[m.id], res);
-    if (p === 3) { pts += 3; exact++; }
-    else if (p === 1) { pts += 1; winner++; }
-  });
-
-  const userSnap = await getDoc(doc(db, 'users', userId));
-  const ud = userSnap.exists() ? userSnap.data() : {};
-
-  const campeonResultSnap = await getDoc(doc(db, '_meta', 'campeonWinner'));
-  const campeonWinner = campeonResultSnap.exists() ? campeonResultSnap.data().team : null;
-  const campeonPredSnap = await getDoc(doc(db, 'campeon', userId));
-  const campeonPred = campeonPredSnap.exists() ? campeonPredSnap.data().team : null;
-  const campeonBonus = campeonWinner && campeonPred && campeonWinner === campeonPred ? 10 : 0;
-
-  await setDoc(doc(db, 'scores', userId), {
-    pts: pts + campeonBonus, exact, winner, played,
-    campeonPred: campeonPred || '',
-    campeonBonus,
-    displayName: ud.displayName || '',
-    email: ud.email || '',
-    photoURL: ud.photoURL || '',
-  });
 }

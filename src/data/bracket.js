@@ -35,9 +35,11 @@ export const BRACKET_MATCHES = [
 ];
 
 // Resuelve un slot contra la tabla de posiciones y los terceros manuales
-export function resolveSlot(slot, standings, manualThirds) {
+// matchId es necesario para los slots de tipo '3' (terceros clasificados)
+export function resolveSlot(slot, standings, manualThirds, matchId) {
   if (slot.type === '3') {
-    return manualThirds?.[slot.group] || null;
+    // Los terceros se guardan en Firestore con clave = matchId del partido
+    return (matchId && manualThirds?.[matchId]) || null;
   }
   const pos = slot.type === '1' ? 0 : 1;
   return standings?.[slot.group]?.[pos]?.team || null;

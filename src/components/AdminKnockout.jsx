@@ -36,30 +36,30 @@ function buildLaterRoundMatches(knockoutResults) {
   };
 
   const r16 = [
-    { id: 'R16_M89',  home: getWinner('R32_M73'), away: getWinner('R32_M74'), date: '4 jul',  label: '8vos M89'  },
-    { id: 'R16_M90',  home: getWinner('R32_M75'), away: getWinner('R32_M76'), date: '4 jul',  label: '8vos M90'  },
-    { id: 'R16_M91',  home: getWinner('R32_M77'), away: getWinner('R32_M78'), date: '5 jul',  label: '8vos M91'  },
-    { id: 'R16_M92',  home: getWinner('R32_M79'), away: getWinner('R32_M80'), date: '5 jul',  label: '8vos M92'  },
-    { id: 'R16_M93',  home: getWinner('R32_M81'), away: getWinner('R32_M82'), date: '6 jul',  label: '8vos M93'  },
-    { id: 'R16_M94',  home: getWinner('R32_M83'), away: getWinner('R32_M84'), date: '6 jul',  label: '8vos M94'  },
-    { id: 'R16_M95',  home: getWinner('R32_M85'), away: getWinner('R32_M86'), date: '7 jul',  label: '8vos M95'  },
-    { id: 'R16_M96',  home: getWinner('R32_M87'), away: getWinner('R32_M88'), date: '7 jul',  label: '8vos M96'  },
+    { id: 'R16_M89',  home: getWinner('R32_M74'), away: getWinner('R32_M77'), date: '4 jul',  label: '8vos M89',   kickoff: '2026-07-04T18:00:00-03:00' },
+    { id: 'R16_M90',  home: getWinner('R32_M73'), away: getWinner('R32_M75'), date: '4 jul',  label: '8vos M90',   kickoff: '2026-07-04T14:00:00-03:00' },
+    { id: 'R16_M91',  home: getWinner('R32_M76'), away: getWinner('R32_M78'), date: '5 jul',  label: '8vos M91',   kickoff: '2026-07-05T17:00:00-03:00' },
+    { id: 'R16_M92',  home: getWinner('R32_M79'), away: getWinner('R32_M80'), date: '5 jul',  label: '8vos M92',   kickoff: '2026-07-05T21:00:00-03:00' },
+    { id: 'R16_M93',  home: getWinner('R32_M83'), away: getWinner('R32_M84'), date: '6 jul',  label: '8vos M93',   kickoff: '2026-07-06T16:00:00-03:00' },
+    { id: 'R16_M94',  home: getWinner('R32_M81'), away: getWinner('R32_M82'), date: '6 jul',  label: '8vos M94',   kickoff: '2026-07-06T21:00:00-03:00' },
+    { id: 'R16_M95',  home: getWinner('R32_M86'), away: getWinner('R32_M88'), date: '7 jul',  label: '8vos M95',   kickoff: '2026-07-07T13:00:00-03:00' },
+    { id: 'R16_M96',  home: getWinner('R32_M85'), away: getWinner('R32_M87'), date: '7 jul',  label: '8vos M96',   kickoff: '2026-07-07T17:00:00-03:00' },
   ];
   const qf = [
-    { id: 'QF_M97',  home: getWinner('R16_M89'), away: getWinner('R16_M90'), date: '9 jul',  label: 'Cuartos M97'  },
-    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), date: '9 jul',  label: 'Cuartos M98'  },
-    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), date: '10 jul', label: 'Cuartos M99'  },
-    { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), date: '10 jul', label: 'Cuartos M100' },
+    { id: 'QF_M97',  home: getWinner('R16_M89'), away: getWinner('R16_M90'), date: '9 jul',  label: 'Cuartos M97',  kickoff: '2026-07-09T17:00:00-03:00' },
+    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), date: '10 jul', label: 'Cuartos M98',  kickoff: '2026-07-10T16:00:00-03:00' },
+    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), date: '11 jul', label: 'Cuartos M99',  kickoff: '2026-07-11T18:00:00-03:00' },
+    { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), date: '11 jul', label: 'Cuartos M100', kickoff: '2026-07-11T22:00:00-03:00' },
   ];
   const sf = [
-    { id: 'SF_M101', home: getWinner('QF_M97'), away: getWinner('QF_M98'), date: '14 jul', label: 'Semi M101' },
-    { id: 'SF_M102', home: getWinner('QF_M99'), away: getWinner('QF_M100'), date: '15 jul', label: 'Semi M102' },
+    { id: 'SF_M101', home: getWinner('QF_M97'),  away: getWinner('QF_M98'),  date: '14 jul', label: 'Semi M101', kickoff: '2026-07-14T16:00:00-03:00' },
+    { id: 'SF_M102', home: getWinner('QF_M99'),  away: getWinner('QF_M100'), date: '15 jul', label: 'Semi M102', kickoff: '2026-07-15T16:00:00-03:00' },
   ];
   const tp = [
-    { id: 'TP_M103', home: getLoser('SF_M101'), away: getLoser('SF_M102'), date: '18 jul', label: '3er Puesto' },
+    { id: 'TP_M103', home: getLoser('SF_M101'),  away: getLoser('SF_M102'),  date: '18 jul', label: '3er Puesto', kickoff: '2026-07-18T18:00:00-03:00' },
   ];
   const final = [
-    { id: 'F_M104', home: getWinner('SF_M101'), away: getWinner('SF_M102'), date: '19 jul', label: 'Final' },
+    { id: 'F_M104',  home: getWinner('SF_M101'), away: getWinner('SF_M102'), date: '19 jul', label: 'Final',      kickoff: '2026-07-19T16:00:00-03:00' },
   ];
   return { r16, qf, sf, tp, final };
 }
@@ -74,19 +74,20 @@ function KnockoutMatchRow({ match, result, onSave }) {
   const [showPenalty, setShowPenalty]     = useState(false);
   const [status, setStatus] = useState('idle');
 
-  // Sync con resultado guardado
+  // Sync con resultado guardado — comparar valores para no resetear mientras el usuario escribe
+  const prevResultRef = React.useRef(null);
   useEffect(() => {
-    if (result) {
-      setHome(String(result.home ?? ''));
-      setAway(String(result.away ?? ''));
-      if (result.penaltyWinner) {
-        setPenaltyWinner(result.penaltyWinner);
-        setShowPenalty(true);
-      } else {
-        setPenaltyWinner('');
-        setShowPenalty(false);
-      }
-    }
+    if (!result) return;
+    const prev = prevResultRef.current;
+    const homeVal = String(result.home ?? '');
+    const awayVal = String(result.away ?? '');
+    const penVal  = result.penaltyWinner ?? '';
+    if (prev && prev.home === homeVal && prev.away === awayVal && prev.penaltyWinner === penVal) return;
+    prevResultRef.current = { home: homeVal, away: awayVal, penaltyWinner: penVal };
+    setHome(homeVal);
+    setAway(awayVal);
+    if (penVal) { setPenaltyWinner(penVal); setShowPenalty(true); }
+    else { setPenaltyWinner(''); setShowPenalty(false); }
   }, [result]);
 
   // Mostrar selector de penales automáticamente si hay empate
@@ -101,7 +102,12 @@ function KnockoutMatchRow({ match, result, onSave }) {
     }
   }, [home, away]);
 
+  const matchStarted = match.kickoff ? Date.now() >= new Date(match.kickoff).getTime() : true;
+
   const handleSave = async () => {
+    if (!matchStarted) {
+      setStatus('future'); setTimeout(() => setStatus('idle'), 3000); return;
+    }
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (isNaN(h) || isNaN(a)) {
@@ -182,12 +188,16 @@ function KnockoutMatchRow({ match, result, onSave }) {
       <div className="admin-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
         <span className="admin-date">{match.label} · {match.date}</span>
         <button
-          className={`btn-save ${status === 'saved' ? 'saved' : ''} ${status === 'error' ? 'error' : ''}`}
+          className={`btn-save ${status === 'saved' ? 'saved' : ''} ${(status === 'error' || status === 'future') ? 'error' : ''}`}
           onClick={handleSave}
-          disabled={status === 'saving'}
+          disabled={status === 'saving' || !matchStarted}
+          title={!matchStarted ? 'El partido aún no comenzó' : ''}
+          style={!matchStarted ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
         >
-          {status === 'saving' ? 'Guardando...'
+          {!matchStarted ? '⏳ Partido no iniciado'
+            : status === 'saving' ? 'Guardando...'
             : status === 'saved' ? '✓ Guardado'
+            : status === 'future' ? '⚠ Partido no iniciado'
             : status === 'error' ? '✗ Revisá los datos'
             : 'Guardar'}
         </button>
@@ -210,8 +220,8 @@ export default function AdminKnockout({ results, onSaveKnockout }) {
   // Construir los partidos de R32 resolviendo slots
   const r32Matches = BRACKET_MATCHES.map(m => ({
     ...m,
-    home: resolveSlot(m.slot1, standings, manualThirds) || m.slot1.label,
-    away: resolveSlot(m.slot2, standings, manualThirds) || m.slot2.label,
+    home: resolveSlot(m.slot1, standings, manualThirds, m.id) || m.slot1.label,
+    away: resolveSlot(m.slot2, standings, manualThirds, m.id) || m.slot2.label,
   }));
 
   const { r16, qf, sf, tp, final } = buildLaterRoundMatches(knockoutResults);

@@ -115,8 +115,15 @@ function AdminMatchRow({ match, result, onSave }) {
     }
   }, [result]);
 
+  const matchStarted = Date.now() >= new Date(match.kickoff).getTime();
+
   const handleSave = async () => {
     if (hasResult) return;
+    if (!matchStarted) {
+      setStatus('future');
+      setTimeout(() => setStatus('idle'), 3000);
+      return;
+    }
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (isNaN(h) || isNaN(a)) {
@@ -143,38 +150,40 @@ function AdminMatchRow({ match, result, onSave }) {
         <div className="admin-inputs">
           <input
             type="number" min="0" max="20" value={home}
-            onChange={e => !hasResult && setHome(e.target.value)}
+            onChange={e => !hasResult && matchStarted && setHome(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="0"
-            disabled={hasResult}
-            style={hasResult ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            disabled={hasResult || !matchStarted}
+            style={(hasResult || !matchStarted) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
           <span>–</span>
           <input
             type="number" min="0" max="20" value={away}
-            onChange={e => !hasResult && setAway(e.target.value)}
+            onChange={e => !hasResult && matchStarted && setAway(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="0"
-            disabled={hasResult}
-            style={hasResult ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            disabled={hasResult || !matchStarted}
+            style={(hasResult || !matchStarted) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
         </div>
         <span><Flag country={match.away} /> {match.away}</span>
       </div>
 
       <div className="admin-actions">
-        <span className="admin-date">{match.date}</span>
+        <span className="admin-date">{formatKickoff(match.kickoff)}{match.venue ? ` · ${match.venue}` : ''}</span>
         <button
-          className={`btn-save ${hasResult ? 'saved' : ''} ${status === 'error' ? 'error' : ''}`}
+          className={`btn-save ${hasResult ? 'saved' : ''} ${status === 'error' ? 'error' : ''} ${status === 'future' ? 'error' : ''}`}
           onClick={handleSave}
-          disabled={hasResult || status === 'saving'}
-          title={hasResult ? 'Resultado ya cargado — no se puede modificar' : ''}
-          style={hasResult ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
+          disabled={hasResult || status === 'saving' || !matchStarted}
+          title={hasResult ? 'Resultado ya cargado — no se puede modificar' : !matchStarted ? 'El partido aún no comenzó' : ''}
+          style={(hasResult || !matchStarted) ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
         >
           {hasResult
             ? '🔒 Resultado cargado'
+            : !matchStarted ? '⏳ Partido no iniciado'
             : status === 'saving' ? 'Guardando...'
             : status === 'saved'  ? '✓ Guardado'
+            : status === 'future' ? '⚠ Partido no iniciado'
             : status === 'error'  ? '✗ Error — revisá permisos'
             : 'Guardar'}
         </button>

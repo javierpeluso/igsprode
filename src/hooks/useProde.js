@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   doc, setDoc, getDoc, onSnapshot, collection, getDocs
 } from 'firebase/firestore';
@@ -16,17 +16,40 @@ import { logPredictionChange, roundLabelFromMatchId } from './usePredictionHisto
 //                               displayName, email, photoURL }
 // ────────────────────────────────────────────────────────────────────────────
 
+// IDs de todos los partidos de fase eliminatoria (16avos → Final)
+const KNOCKOUT_MATCH_IDS = [
+  'R32_M73','R32_M74','R32_M75','R32_M76','R32_M77','R32_M78','R32_M79','R32_M80',
+  'R32_M81','R32_M82','R32_M83','R32_M84','R32_M85','R32_M86','R32_M87','R32_M88',
+  'R16_M89','R16_M90','R16_M91','R16_M92','R16_M93','R16_M94','R16_M95','R16_M96',
+  'QF_M97','QF_M98','QF_M99','QF_M100',
+  'SF_M101','SF_M102',
+  'TP_M103','F_M104',
+];
+
 export async function recalcScore(userId, allResults) {
   const predSnap = await getDoc(doc(db, 'predictions', userId));
   const preds = predSnap.exists() ? predSnap.data() : {};
 
   let pts = 0, exact = 0, winner = 0, played = 0;
+
+  // ── Fase de grupos ─────────────────────────────────────────────────────────
   ALL_MATCHES.forEach((m) => {
     const res = allResults[m.id];
     if (!res) return;
-    if (!preds[m.id]) return; // sin pronóstico de este usuario -> no cuenta como "jugado"
+    if (!preds[m.id]) return;
     played++;
     const p = calcPoints(preds[m.id], res);
+    if (p === 3) { pts += 3; exact++; }
+    else if (p === 1) { pts += 1; winner++; }
+  });
+
+  // ── Fase eliminatoria ──────────────────────────────────────────────────────
+  KNOCKOUT_MATCH_IDS.forEach((matchId) => {
+    const res = allResults[matchId];
+    if (!res) return;
+    if (!preds[matchId]) return;
+    played++;
+    const p = calcPoints(preds[matchId], res);
     if (p === 3) { pts += 3; exact++; }
     else if (p === 1) { pts += 1; winner++; }
   });
@@ -63,7 +86,7 @@ export function usePredictions(user) {
     return unsub;
   }, [userId]);
 
-  const savePrediction = async (matchId, home, away) => {
+  const savePrediction = useCallback(async (matchId, home, away) => {
     // Capturamos el valor anterior antes de pisarlo, para el historial de cambios
     const prevSnap = await getDoc(doc(db, 'predictions', userId));
     const previous = prevSnap.exists() ? (prevSnap.data()[matchId] || null) : null;
@@ -86,11 +109,11 @@ export function usePredictions(user) {
     const allRes = snap.exists() ? snap.data() : {};
     await recalcScore(userId, allRes);
     await recalcUserStats(userId, allRes);
-  };
+  }, [userId, user?.displayName, user?.email]);
 
   // Pronóstico de fase eliminatoria: incluye penaltyWinner si el usuario
   // pronosticó un empate en los 120min y eligió un ganador por penales.
-  const saveKnockoutPrediction = async (matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
+  const saveKnockoutPrediction = useCallback(async (matchId, home, away, penaltyWinner, homeTeam, awayTeam) => {
     const prevSnap = await getDoc(doc(db, 'predictions', userId));
     const previous = prevSnap.exists() ? (prevSnap.data()[matchId] || null) : null;
 
@@ -110,7 +133,13 @@ export function usePredictions(user) {
       current: { home, away, penaltyWinner: penaltyWinner || null },
       source: 'user',
     });
-  };
+
+    // Recalcular puntos y estadísticas del usuario (igual que savePrediction)
+    const snap = await getDoc(doc(db, 'results', 'all'));
+    const allRes = snap.exists() ? snap.data() : {};
+    await recalcScore(userId, allRes);
+    await recalcUserStats(userId, allRes);
+  }, [userId, user?.displayName, user?.email]);
 
   return { predictions, savePrediction, saveKnockoutPrediction };
 }
@@ -126,6 +155,11 @@ export function useResults() {
   }, []);
 
   const saveResult = async (matchId, home, away) => {
+    // Seguridad: no guardar resultado si el partido aún no comenzó
+    const match = ALL_MATCHES.find(m => m.id === matchId);
+    if (match && Date.now() < new Date(match.kickoff).getTime()) {
+      throw new Error(`Partido ${matchId} aún no comenzó (kickoff: ${match.kickoff})`);
+    }
     await setDoc(doc(db, 'results', 'all'), { [matchId]: { home, away } }, { merge: true });
     const snap = await getDoc(doc(db, 'results', 'all'));
     const allResults = snap.exists() ? snap.data() : {};
@@ -150,9 +184,25 @@ export function useResults() {
   // Resultado de fase eliminatoria: incluye opcionalmente penaltyWinner
   // cuando el resultado en 120min terminó en empate.
   const saveKnockoutResult = async (matchId, payload) => {
+    // Seguridad: no guardar resultado si el partido aún no comenzó
+    const match = ALL_MATCHES.find(m => m.id === matchId);
+    if (match && Date.now() < new Date(match.kickoff).getTime()) {
+      throw new Error(`Partido ${matchId} aún no comenzó`);
+    }
     await setDoc(doc(db, 'results', 'all'), { [matchId]: payload }, { merge: true });
     const snap = await getDoc(doc(db, 'results', 'all'));
     const allResults = snap.exists() ? snap.data() : {};
+
+    // Guardar posiciones actuales ANTES de recalcular (igual que saveResult)
+    // para que useRanking pueda calcular las flechas de tendencia ▲▼
+    const scoresSnap = await getDocs(collection(db, 'scores'));
+    const currentRows = scoresSnap.docs
+      .map(d => ({ uid: d.id, ...d.data() }))
+      .sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+    const positions = {};
+    currentRows.forEach((r, i) => { positions[r.uid] = i + 1; });
+    await setDoc(doc(db, '_meta', 'rankingPositions'), positions);
+
     await markResultUpdated();
     const usersSnap = await getDocs(collection(db, 'users'));
     await Promise.all(usersSnap.docs.map(u => recalcScore(u.id, allResults)));

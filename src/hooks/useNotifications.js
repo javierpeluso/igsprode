@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  doc, onSnapshot, setDoc, updateDoc,
+  doc, onSnapshot, setDoc, updateDoc, getDoc,
   collection, addDoc, query, orderBy, limit, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -20,9 +20,7 @@ export async function sendMentionNotification({ toUserId, fromUser, messageText 
 
   // Incrementar contador unread en el doc raíz
   const rootRef = doc(db, 'notifications', toUserId);
-  const snap = await import('firebase/firestore').then(m =>
-    m.getDoc(rootRef)
-  );
+  const snap = await getDoc(rootRef);
   const current = snap.exists() ? (snap.data().unread || 0) : 0;
   await setDoc(rootRef, { unread: current + 1 }, { merge: true });
 }

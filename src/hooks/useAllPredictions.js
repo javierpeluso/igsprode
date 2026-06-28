@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 // Devuelve los pronósticos de TODOS los usuarios para un partido específico
@@ -24,7 +24,6 @@ export function useAllPredictions(matchId, enabled) {
           const uid = userDoc.id;
           const userData = userDoc.data();
           // Leemos el doc plano de predicciones del usuario
-          const { getDoc, doc } = await import('firebase/firestore');
           const predSnap = await getDoc(doc(db, 'predictions', uid));
           const preds = predSnap.exists() ? predSnap.data() : {};
           const pred = preds[matchId] || null;

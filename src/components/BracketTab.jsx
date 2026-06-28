@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useManualThirds } from '../hooks/useBracket';
 import KnockoutPredictions from './KnockoutPredictions';
 
@@ -15,7 +15,8 @@ function getTimeLeft() {
   return { days, hours, minutes, seconds };
 }
 
-function KnockoutCountdownModal() {
+// Modal con su propio timer — completamente aislado del resto del árbol
+const KnockoutCountdownModal = memo(function KnockoutCountdownModal() {
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
 
   useEffect(() => {
@@ -60,33 +61,44 @@ function KnockoutCountdownModal() {
       </div>
     </div>
   );
-}
+});
 
-export default function BracketTab({ results, isAdmin, predictions, onSaveKnockoutPrediction }) {
-  const { manualThirds } = useManualThirds();
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft);
+// Wrapper que solo decide si mostrar el modal o el contenido.
+// NO tiene timer propio — el timer vive dentro de KnockoutCountdownModal.
+function UnlockGate({ isAdmin, children }) {
+  const [locked, setLocked] = useState(() => !isAdmin && getTimeLeft() !== null);
 
   useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    if (isAdmin || !locked) return;
+    const interval = setInterval(() => {
+      if (getTimeLeft() === null) {
+        setLocked(false);
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isAdmin, locked]);
 
-  // Usuarios no-admin: si la fecha de unlock no llegó, mostrar SOLO el modal (sin contenido debajo)
-  if (!isAdmin && timeLeft !== null) {
+  if (locked) {
     return (
       <div className="tab-content">
         <KnockoutCountdownModal />
       </div>
     );
   }
+  return children;
+}
 
+export default function BracketTab({ results, isAdmin, predictions, onSaveKnockoutPrediction }) {
   return (
-    <div className="tab-content">
-      <KnockoutPredictions
-        results={results}
-        predictions={predictions || {}}
-        onSaveKnockoutPrediction={onSaveKnockoutPrediction}
-      />
-    </div>
+    <UnlockGate isAdmin={isAdmin}>
+      <div className="tab-content">
+        <KnockoutPredictions
+          results={results}
+          predictions={predictions || {}}
+          onSaveKnockoutPrediction={onSaveKnockoutPrediction}
+        />
+      </div>
+    </UnlockGate>
   );
 }

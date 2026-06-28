@@ -7,6 +7,8 @@ import { Flag } from '../data/flags';
 import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
 import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
 import { logPredictionChange } from '../hooks/usePredictionHistory';
+import { recalcScore } from '../hooks/useProde';
+import { recalcUserStats } from '../hooks/useProfile';
 
 // ── Rondas ───────────────────────────────────────────────────────────────────
 const ROUNDS = [
@@ -39,30 +41,30 @@ function buildLaterRoundMatches(knockoutResults) {
   };
   return {
     R16: [
-      { id:'R16_M89',  home:getWinner('R32_M73'), away:getWinner('R32_M74'), label:'8vos M89',  date:'4 jul'  },
-      { id:'R16_M90',  home:getWinner('R32_M75'), away:getWinner('R32_M76'), label:'8vos M90',  date:'4 jul'  },
-      { id:'R16_M91',  home:getWinner('R32_M77'), away:getWinner('R32_M78'), label:'8vos M91',  date:'5 jul'  },
-      { id:'R16_M92',  home:getWinner('R32_M79'), away:getWinner('R32_M80'), label:'8vos M92',  date:'5 jul'  },
-      { id:'R16_M93',  home:getWinner('R32_M81'), away:getWinner('R32_M82'), label:'8vos M93',  date:'6 jul'  },
-      { id:'R16_M94',  home:getWinner('R32_M83'), away:getWinner('R32_M84'), label:'8vos M94',  date:'6 jul'  },
-      { id:'R16_M95',  home:getWinner('R32_M85'), away:getWinner('R32_M86'), label:'8vos M95',  date:'7 jul'  },
-      { id:'R16_M96',  home:getWinner('R32_M87'), away:getWinner('R32_M88'), label:'8vos M96',  date:'7 jul'  },
+      { id:'R16_M89',  home:getWinner('R32_M74'), away:getWinner('R32_M77'), label:'8vos M89',    date:'4 jul',  kickoff:'2026-07-04T18:00:00-03:00' },
+      { id:'R16_M90',  home:getWinner('R32_M73'), away:getWinner('R32_M75'), label:'8vos M90',    date:'4 jul',  kickoff:'2026-07-04T14:00:00-03:00' },
+      { id:'R16_M91',  home:getWinner('R32_M76'), away:getWinner('R32_M78'), label:'8vos M91',    date:'5 jul',  kickoff:'2026-07-05T17:00:00-03:00' },
+      { id:'R16_M92',  home:getWinner('R32_M79'), away:getWinner('R32_M80'), label:'8vos M92',    date:'5 jul',  kickoff:'2026-07-05T21:00:00-03:00' },
+      { id:'R16_M93',  home:getWinner('R32_M83'), away:getWinner('R32_M84'), label:'8vos M93',    date:'6 jul',  kickoff:'2026-07-06T16:00:00-03:00' },
+      { id:'R16_M94',  home:getWinner('R32_M81'), away:getWinner('R32_M82'), label:'8vos M94',    date:'6 jul',  kickoff:'2026-07-06T21:00:00-03:00' },
+      { id:'R16_M95',  home:getWinner('R32_M86'), away:getWinner('R32_M88'), label:'8vos M95',    date:'7 jul',  kickoff:'2026-07-07T13:00:00-03:00' },
+      { id:'R16_M96',  home:getWinner('R32_M85'), away:getWinner('R32_M87'), label:'8vos M96',    date:'7 jul',  kickoff:'2026-07-07T17:00:00-03:00' },
     ],
     QF: [
-      { id:'QF_M97',  home:getWinner('R16_M89'), away:getWinner('R16_M90'), label:'Cuartos M97',  date:'9 jul'  },
-      { id:'QF_M98',  home:getWinner('R16_M91'), away:getWinner('R16_M92'), label:'Cuartos M98',  date:'9 jul'  },
-      { id:'QF_M99',  home:getWinner('R16_M93'), away:getWinner('R16_M94'), label:'Cuartos M99',  date:'10 jul' },
-      { id:'QF_M100', home:getWinner('R16_M95'), away:getWinner('R16_M96'), label:'Cuartos M100', date:'10 jul' },
+      { id:'QF_M97',   home:getWinner('R16_M89'), away:getWinner('R16_M90'), label:'Cuartos M97',  date:'9 jul',  kickoff:'2026-07-09T17:00:00-03:00' },
+      { id:'QF_M98',   home:getWinner('R16_M91'), away:getWinner('R16_M92'), label:'Cuartos M98',  date:'10 jul', kickoff:'2026-07-10T16:00:00-03:00' },
+      { id:'QF_M99',   home:getWinner('R16_M93'), away:getWinner('R16_M94'), label:'Cuartos M99',  date:'11 jul', kickoff:'2026-07-11T18:00:00-03:00' },
+      { id:'QF_M100',  home:getWinner('R16_M95'), away:getWinner('R16_M96'), label:'Cuartos M100', date:'11 jul', kickoff:'2026-07-11T22:00:00-03:00' },
     ],
     SF: [
-      { id:'SF_M101', home:getWinner('QF_M97'), away:getWinner('QF_M98'),   label:'Semi M101', date:'14 jul' },
-      { id:'SF_M102', home:getWinner('QF_M99'), away:getWinner('QF_M100'),  label:'Semi M102', date:'15 jul' },
+      { id:'SF_M101',  home:getWinner('QF_M97'),  away:getWinner('QF_M98'),  label:'Semi M101', date:'14 jul', kickoff:'2026-07-14T16:00:00-03:00' },
+      { id:'SF_M102',  home:getWinner('QF_M99'),  away:getWinner('QF_M100'), label:'Semi M102', date:'15 jul', kickoff:'2026-07-15T16:00:00-03:00' },
     ],
     TP: [
-      { id:'TP_M103', home:getLoser('SF_M101'), away:getLoser('SF_M102'),   label:'3er Puesto', date:'18 jul' },
+      { id:'TP_M103',  home:getLoser('SF_M101'),  away:getLoser('SF_M102'),  label:'3er Puesto', date:'18 jul', kickoff:'2026-07-18T18:00:00-03:00' },
     ],
     F: [
-      { id:'F_M104',  home:getWinner('SF_M101'), away:getWinner('SF_M102'), label:'Final',      date:'19 jul' },
+      { id:'F_M104',   home:getWinner('SF_M101'), away:getWinner('SF_M102'), label:'Final',      date:'19 jul', kickoff:'2026-07-19T16:00:00-03:00' },
     ],
   };
 }
@@ -393,8 +395,8 @@ export default function AdminKnockoutPredictions({ results }) {
   // Construir partidos de la ronda activa
   const r32Matches = BRACKET_MATCHES.map(m => ({
     ...m,
-    home: resolveSlot(m.slot1, standings, manualThirds) || m.slot1.label,
-    away: resolveSlot(m.slot2, standings, manualThirds) || m.slot2.label,
+    home: resolveSlot(m.slot1, standings, manualThirds, m.id) || m.slot1.label,
+    away: resolveSlot(m.slot2, standings, manualThirds, m.id) || m.slot2.label,
     label: `16avos M${m.matchNum}`,
   }));
 
@@ -426,6 +428,12 @@ export default function AdminKnockoutPredictions({ results }) {
       source: 'admin',
     });
 
+    // Recalcular puntos y stats del usuario afectado
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+    await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
+
     setPredictions(prev => ({
       ...prev,
       [uid]: { ...(prev[uid] || {}), [matchId]: payload },
@@ -449,6 +457,12 @@ export default function AdminKnockoutPredictions({ results }) {
       current: null,
       source: 'admin',
     });
+
+    // Recalcular puntos y stats del usuario afectado
+    const resultsSnap = await getDoc(doc(db, 'results', 'all'));
+    const allResults = resultsSnap.exists() ? resultsSnap.data() : {};
+    await recalcScore(uid, allResults);
+    await recalcUserStats(uid, allResults);
 
     setPredictions(prev => {
       const updated = { ...prev, [uid]: { ...(prev[uid] || {}) } };

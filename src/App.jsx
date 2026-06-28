@@ -25,6 +25,8 @@ import ProfileMenu from './components/ProfileMenu';
 import StatsPage from './components/StatsPage';
 import AdminPlayerStats from './components/AdminPlayerStats';
 import ResultsNotificationModal from './components/ResultsNotificationModal';
+import GroupStageRecapModal, { useGroupStageRecap } from './components/GroupStageRecapModal';
+import KnockoutTutorialModal, { useKnockoutTutorial } from './components/KnockoutTutorialModal';
 import PaymentWarningBanner from './components/PaymentWarningBanner';
 import CampeonWarningBanner from './components/CampeonWarningBanner';
 import { Analytics } from "@vercel/analytics/react"
@@ -150,6 +152,11 @@ function AuthorizedApp({ user }) {
   const [showPlayerStats, setShowPlayerStats] = useState(false);
   const [paymentWarning, setPaymentWarning] = useState(false);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [showRecap, setShowRecap] = useState(false);
+  const [tablaView, setTablaView] = useState('grupos'); // 'grupos' | 'eliminatoria' — controlado desde App para que el tutorial pueda navegarlo
+
+  const { shouldShow: recapShouldShow, recapData, markSeen: markRecapSeen } = useGroupStageRecap(user.uid, predictions, results);
+  const { shouldShow: tutorialShouldShow, markSeen: markTutorialSeen } = useKnockoutTutorial(user.uid);
 
   // Mostrar el modal al entrar si hay resultados nuevos
   // Solo se activa una vez por sesión (cuando hasNew pasa a true por primera vez)
@@ -160,7 +167,30 @@ function AuthorizedApp({ user }) {
       setShowResultsModal(true);
       setModalShown(true);
     }
-  }, [hasNew, modalShown]);  
+  }, [hasNew, modalShown]);
+
+  // Mostrar el recap de fase de grupos (una sola vez por sesión)
+  // Usamos recapPending para desacoplar el "saber que hay recap" del "mostrarlo":
+  // el recap puede estar listo al mismo tiempo que showResultsModal es true,
+  // por eso no tomamos la decisión de mostrar en el mismo effect que detecta la condición.
+  const [recapPending, setRecapPending] = useState(false);
+  const [recapModalShown, setRecapModalShown] = useState(false);
+
+  // Effect 1: detecta cuándo el recap está disponible y lo marca como pendiente
+  useEffect(() => {
+    if (recapShouldShow && recapData && !recapModalShown) {
+      setRecapPending(true);
+    }
+  }, [recapShouldShow, recapData, recapModalShown]);
+
+  // Effect 2: abre el recap en cuanto no haya otro modal bloqueando
+  useEffect(() => {
+    if (recapPending && !showResultsModal) {
+      setShowRecap(true);
+      setRecapModalShown(true);
+      setRecapPending(false);
+    }
+  }, [recapPending, showResultsModal]);
 
   useEffect(() => {
     registerUser(user);
@@ -319,7 +349,7 @@ function AuthorizedApp({ user }) {
             <HistorialTab results={results} predictions={predictions} />
           )}
           {tab === 2 && (
-            <TablaTab results={results} />
+            <TablaTab results={results} view={tablaView} onViewChange={setTablaView} />
           )}
           {tab === 3 && (
             <BracketTab
@@ -351,6 +381,26 @@ function AuthorizedApp({ user }) {
             setShowResultsModal(false);
             markAsSeen();
             setTab(4); // Tab Ranking
+          }}
+        />
+      )}
+      {tutorialShouldShow && !showResultsModal && !showRecap && (
+        <KnockoutTutorialModal
+          onClose={() => markTutorialSeen()}
+          onNavigate={(targetTab, targetView) => {
+            setTab(targetTab);
+            if (targetView !== undefined) setTablaView(targetView);
+          }}
+        />
+      )}
+      {showRecap && recapData && !showResultsModal && (
+        <GroupStageRecapModal
+          data={recapData}
+          ranking={ranking}
+          currentUid={user.uid}
+          onClose={() => {
+            setShowRecap(false);
+            markRecapSeen();
           }}
         />
       )}

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 function Avatar({ user }) {
@@ -17,54 +16,61 @@ export default function AdminRankingDetalle({ adminUids = [] }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [sort, setSort]       = useState('pts'); // 'pts' | 'exact' | 'winner' | 'miss' | 'played'
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
+
+  // Serializar para usar como dependencia estable en useCallback
+  const adminUidsKey = adminUids.join(',');
+
+  const doFetch = React.useCallback(async () => {
+    setLoading(true);
+    const [usersSnap, scoresSnap] = await Promise.all([
+      getDocs(collection(db, 'users')),
+      getDocs(collection(db, 'scores')),
+    ]);
+
+    const scoresMap = {};
+    scoresSnap.docs.forEach(d => { scoresMap[d.id] = d.data(); });
+
+    const list = usersSnap.docs
+      .filter(d => !adminUids.includes(d.id))
+      .map(d => {
+        const u  = d.data();
+        const sc = scoresMap[d.id] || {};
+        const exact  = sc.exact  ?? 0;
+        const winner = sc.winner ?? 0;
+        const played = sc.played ?? 0;
+        const miss   = played - exact - winner;
+        const pts    = sc.pts    ?? 0;
+        const pctOk  = played > 0 ? Math.round(((exact + winner) / played) * 100) : 0;
+        return {
+          uid:         d.id,
+          displayName: u.displayName || u.email || d.id,
+          email:       u.email || '',
+          photoURL:    u.photoURL || '',
+          pts,
+          exact,
+          winner,
+          miss:        Math.max(miss, 0),
+          played,
+          pctOk,
+          campeonPred:  sc.campeonPred  || '',
+          campeonBonus: sc.campeonBonus || 0,
+        };
+      });
+
+    setRows(list);
+    setLoading(false);
+  }, [adminUidsKey]);
 
   useEffect(() => {
     let cancelled = false;
-    const fetch = async () => {
-      setLoading(true);
-      const [usersSnap, scoresSnap] = await Promise.all([
-        getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'scores')),
-      ]);
-
-      const scoresMap = {};
-      scoresSnap.docs.forEach(d => { scoresMap[d.id] = d.data(); });
-
-      const list = usersSnap.docs
-        .filter(d => !adminUids.includes(d.id))
-        .map(d => {
-          const u  = d.data();
-          const sc = scoresMap[d.id] || {};
-          const exact  = sc.exact  ?? 0;
-          const winner = sc.winner ?? 0;
-          const played = sc.played ?? 0;
-          const miss   = played - exact - winner;
-          const pts    = sc.pts    ?? 0;
-          const pctOk  = played > 0 ? Math.round(((exact + winner) / played) * 100) : 0;
-          return {
-            uid:         d.id,
-            displayName: u.displayName || u.email || d.id,
-            email:       u.email || '',
-            photoURL:    u.photoURL || '',
-            pts,
-            exact,
-            winner,
-            miss:        Math.max(miss, 0),
-            played,
-            pctOk,
-            campeonPred:  sc.campeonPred  || '',
-            campeonBonus: sc.campeonBonus || 0,
-          };
-        });
-
-      if (!cancelled) {
-        setRows(list);
-        setLoading(false);
-      }
+    const run = async () => {
+      await doFetch();
+      if (cancelled) return;
     };
-    fetch();
+    run();
     return () => { cancelled = true; };
-  }, [adminUids.join(',')]);
+  }, [doFetch, lastRefresh]);
 
   const sorted = [...rows]
     .filter(r =>
@@ -129,6 +135,14 @@ export default function AdminRankingDetalle({ adminUids = [] }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+        <button
+          className="admin-sort-btn"
+          style={{ marginLeft: 'auto' }}
+          onClick={() => setLastRefresh(Date.now())}
+          title="Actualizar datos del ranking"
+        >
+          🔄 Actualizar
+        </button>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, color: 'var(--c-muted)', alignSelf: 'center', marginRight: 2 }}>Ordenar:</span>
           <SortBtn col="pts"    label="Puntos" />
@@ -216,7 +230,7 @@ export default function AdminRankingDetalle({ adminUids = [] }) {
                     <span
                       className="admin-ranking-pct"
                       style={{
-                        color: r.pctOk >= 60 ? 'var(--c-exact, #4ade80)'
+                        color: r.pctOk >= 60 ? 'var(--c-exact, #f0b429)'
                              : r.pctOk >= 35 ? 'var(--c-winner, #facc15)'
                              : 'var(--c-miss, #f87171)',
                       }}
