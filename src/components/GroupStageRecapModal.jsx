@@ -194,7 +194,7 @@ function CardAccuracy({ data }) {
         </div>
       </div>
       <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>
-        {data.exact} de {data.played} partidos pronosticadosnpm exactos
+        {data.exact} de {data.played} partidos pronosticados exactos
       </div>
     </div>
   );
@@ -303,12 +303,18 @@ export default function GroupStageRecapModal({ data, ranking, currentUid, onClos
   const [exiting, setExiting] = useState(false);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
 
+  // Evaluar CardRanking antes de construir el array:
+  // filter(Boolean) no funciona con JSX elements (son objetos siempre truthy),
+  // por eso calculamos si el usuario tiene posición en el ranking primero.
+  const myPos = ranking.findIndex(r => r.uid === currentUid);
+  const rankingCard = myPos !== -1 ? <CardRanking ranking={ranking} currentUid={currentUid} /> : null;
+
   const cards = [
     <CardIntro data={data} />,
     <CardPoints data={data} />,
     <CardAccuracy data={data} />,
     <CardBestMoments data={data} />,
-    <CardRanking ranking={ranking} currentUid={currentUid} />,
+    rankingCard,
     <CardOutro onClose={onClose} />,
   ].filter(Boolean);
 
