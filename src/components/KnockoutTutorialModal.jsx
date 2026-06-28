@@ -358,12 +358,11 @@ export default function KnockoutTutorialModal({ onClose, onNavigate }) {
 
   // Bloquear scroll
   useEffect(() => {
-    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const noTouch = (e) => e.preventDefault();
     document.addEventListener('touchmove', noTouch, { passive: false });
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = '';
       document.removeEventListener('touchmove', noTouch);
     };
   }, []);
