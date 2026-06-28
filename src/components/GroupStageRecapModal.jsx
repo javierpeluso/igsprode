@@ -194,7 +194,7 @@ function CardAccuracy({ data }) {
         </div>
       </div>
       <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>
-        {data.exact} de {data.played} partidos pronosticados exactos
+        {data.exact} de {data.played} partidos pronosticadosnpm exactos
       </div>
     </div>
   );
