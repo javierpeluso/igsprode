@@ -200,6 +200,22 @@ function CardAccuracy({ data }) {
   );
 }
 
+function ScoreChip({ home, away, accent }) {
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      background: accent ? 'rgba(99,207,139,0.15)' : 'rgba(255,255,255,0.07)',
+      border: `1px solid ${accent ? 'rgba(99,207,139,0.3)' : 'rgba(255,255,255,0.12)'}`,
+      borderRadius: 8, padding: '3px 10px',
+      fontFamily: 'Bebas Neue, sans-serif', fontSize: 18,
+      color: accent ? '#63cf8b' : 'rgba(255,255,255,0.7)',
+      letterSpacing: '0.04em',
+    }}>
+      {home} – {away}
+    </div>
+  );
+}
+
 function CardBestMoments({ data }) {
   if (!data.bestMatches.length) return (
     <div style={cardBase}>
@@ -238,7 +254,14 @@ function CardBestMoments({ data }) {
 function CardRanking({ ranking, currentUid }) {
   const myPos = ranking.findIndex(r => r.uid === currentUid);
   const me = ranking[myPos];
-  if (!me) return null;
+  if (!me) return (
+    <div style={cardBase}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+      <div style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 20, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>
+        Cargando ranking...
+      </div>
+    </div>
+  );
   const pos = myPos + 1;
   const total = ranking.length;
   const top = Math.round((pos / total) * 100);
@@ -303,18 +326,14 @@ export default function GroupStageRecapModal({ data, ranking, currentUid, onClos
   const [exiting, setExiting] = useState(false);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
 
-  // Evaluar CardRanking antes de construir el array:
-  // filter(Boolean) no funciona con JSX elements (son objetos siempre truthy),
-  // por eso calculamos si el usuario tiene posición en el ranking primero.
-  const myPos = ranking.findIndex(r => r.uid === currentUid);
-  const rankingCard = myPos !== -1 ? <CardRanking ranking={ranking} currentUid={currentUid} /> : null;
-
+  // CardRanking maneja internamente el estado de carga (muestra "Cargando...")
+  // así nunca queda una card vacía/negra
   const cards = [
     <CardIntro data={data} />,
     <CardPoints data={data} />,
     <CardAccuracy data={data} />,
     <CardBestMoments data={data} />,
-    rankingCard,
+    <CardRanking ranking={ranking} currentUid={currentUid} />,
     <CardOutro onClose={onClose} />,
   ].filter(Boolean);
 
