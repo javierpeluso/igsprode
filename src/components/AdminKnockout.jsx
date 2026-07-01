@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { calcPoints } from '../data/fixture';
 import { Flag } from '../data/flags';
 import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
 import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
@@ -65,6 +68,93 @@ function buildLaterRoundMatches(knockoutResults) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Avatar
+// ─────────────────────────────────────────────────────────────────────────────
+function Avatar({ user }) {
+  if (user.photoURL)
+    return <img src={user.photoURL} alt={user.displayName} className="pred-avatar" referrerPolicy="no-referrer" />;
+  const initials = (user.displayName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  return <div className="pred-avatar pred-avatar-initials">{initials}</div>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Panel de pronósticos para eliminatoria
+// ─────────────────────────────────────────────────────────────────────────────
+function AdminAllKnockoutPredictions({ matchId, result }) {
+  const [allPreds, setAllPreds] = useState([]);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchAll = async () => {
+      setLoading(true);
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const rows = await Promise.all(
+        usersSnap.docs.map(async (userDoc) => {
+          const uid      = userDoc.id;
+          const userData = userDoc.data();
+          const predSnap = await getDoc(doc(db, 'predictions', uid));
+          const preds    = predSnap.exists() ? predSnap.data() : {};
+          return {
+            uid,
+            displayName: userData.displayName || userData.email,
+            photoURL:    userData.photoURL,
+            prediction:  preds[matchId] || null,
+          };
+        })
+      );
+      rows.sort((a, b) => {
+        if (a.prediction && !b.prediction) return -1;
+        if (!a.prediction && b.prediction) return 1;
+        return (a.displayName || '').localeCompare(b.displayName || '');
+      });
+      if (!cancelled) { setAllPreds(rows); setLoading(false); }
+    };
+    fetchAll();
+    return () => { cancelled = true; };
+  }, [matchId]);
+
+  if (loading) return <div className="preds-loading">Cargando pronósticos...</div>;
+
+  return (
+    <div className="match-predictions">
+      <div className="preds-title">Pronósticos de todos</div>
+      <div className="preds-list">
+        {allPreds.map(({ uid, displayName, photoURL, prediction }) => {
+          const pts = result ? calcPoints(prediction, result) : null;
+          // Bonus penales: si ambos aciertan el ganador por penales también es exacto
+          const penCorrect = result?.penaltyWinner && prediction?.penaltyWinner === result.penaltyWinner;
+          return (
+            <div key={uid} className="pred-row">
+              <Avatar user={{ displayName, photoURL }} />
+              <span className="pred-name">{displayName}</span>
+              <span className="pred-score">
+                {prediction
+                  ? <>
+                      {prediction.home} – {prediction.away}
+                      {prediction.penaltyWinner && (
+                        <span style={{ fontSize: 11, color: 'var(--c-muted)', marginLeft: 4 }}>
+                          · pen: {prediction.penaltyWinner}
+                        </span>
+                      )}
+                    </>
+                  : <span className="pred-none">Sin pronóstico</span>
+                }
+              </span>
+              {result && (
+                <span className={`pred-pts ${pts === 3 ? 'exact' : pts === 1 ? 'winner' : pts === 0 ? 'miss' : 'no-pred'}`}>
+                  {pts === 3 ? (penCorrect ? '⚡ +3 pen' : '⚡ +3') : pts === 1 ? '✓ +1' : pts === 0 ? '✗ 0' : '–'}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Fila de un partido con soporte de penales
 // ─────────────────────────────────────────────────────────────────────────────
 function KnockoutMatchRow({ match, result, onSave }) {
@@ -73,6 +163,9 @@ function KnockoutMatchRow({ match, result, onSave }) {
   const [penaltyWinner, setPenaltyWinner] = useState('');
   const [showPenalty, setShowPenalty]     = useState(false);
   const [status, setStatus] = useState('idle');
+  const [expanded, setExpanded] = useState(false);
+
+  const hasResult = !!result;
 
   // Sync con resultado guardado — comparar valores para no resetear mientras el usuario escribe
   const prevResultRef = React.useRef(null);
@@ -92,6 +185,7 @@ function KnockoutMatchRow({ match, result, onSave }) {
 
   // Mostrar selector de penales automáticamente si hay empate
   useEffect(() => {
+    if (hasResult) return; // no recalcular si ya está guardado
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (!isNaN(h) && !isNaN(a) && h === a) {
@@ -100,11 +194,12 @@ function KnockoutMatchRow({ match, result, onSave }) {
       setShowPenalty(false);
       setPenaltyWinner('');
     }
-  }, [home, away]);
+  }, [home, away, hasResult]);
 
   const matchStarted = match.kickoff ? Date.now() >= new Date(match.kickoff).getTime() : true;
 
   const handleSave = async () => {
+    if (hasResult) return;
     if (!matchStarted) {
       setStatus('future'); setTimeout(() => setStatus('idle'), 3000); return;
     }
@@ -143,16 +238,20 @@ function KnockoutMatchRow({ match, result, onSave }) {
         <div className="admin-inputs">
           <input
             type="number" min="0" max="20" value={home}
-            onChange={e => setHome(e.target.value)}
+            onChange={e => !hasResult && setHome(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="0"
+            disabled={hasResult || !matchStarted}
+            style={(hasResult || !matchStarted) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
           <span>–</span>
           <input
             type="number" min="0" max="20" value={away}
-            onChange={e => setAway(e.target.value)}
+            onChange={e => !hasResult && setAway(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="0"
+            disabled={hasResult || !matchStarted}
+            style={(hasResult || !matchStarted) ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           />
         </div>
         <span style={{ minWidth: 90, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
@@ -160,20 +259,22 @@ function KnockoutMatchRow({ match, result, onSave }) {
         </span>
       </div>
 
-      {/* Selector de penales — aparece solo si hay empate */}
+      {/* Selector de penales — aparece solo si hay empate y no está bloqueado */}
       {showPenalty && (
         <div className="knockout-penalty-box">
           <span className="knockout-penalty-label">⚽ Empate — ¿quién gana por penales?</span>
           <div className="knockout-penalty-options">
             <button
               className={`knockout-penalty-btn ${penaltyWinner === homeLabel ? 'selected' : ''}`}
-              onClick={() => setPenaltyWinner(homeLabel)}
+              onClick={() => !hasResult && setPenaltyWinner(homeLabel)}
+              disabled={hasResult}
             >
               {!isPending && <Flag country={homeLabel} />} {homeLabel}
             </button>
             <button
               className={`knockout-penalty-btn ${penaltyWinner === awayLabel ? 'selected' : ''}`}
-              onClick={() => setPenaltyWinner(awayLabel)}
+              onClick={() => !hasResult && setPenaltyWinner(awayLabel)}
+              disabled={hasResult}
             >
               {!isPending && <Flag country={awayLabel} />} {awayLabel}
             </button>
@@ -188,13 +289,15 @@ function KnockoutMatchRow({ match, result, onSave }) {
       <div className="admin-actions" style={{ width: '100%', justifyContent: 'flex-end' }}>
         <span className="admin-date">{match.label} · {match.date}</span>
         <button
-          className={`btn-save ${status === 'saved' ? 'saved' : ''} ${(status === 'error' || status === 'future') ? 'error' : ''}`}
+          className={`btn-save ${hasResult ? 'saved' : ''} ${(status === 'error' || status === 'future') ? 'error' : ''}`}
           onClick={handleSave}
-          disabled={status === 'saving' || !matchStarted}
-          title={!matchStarted ? 'El partido aún no comenzó' : ''}
-          style={!matchStarted ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
+          disabled={hasResult || status === 'saving' || !matchStarted}
+          title={hasResult ? 'Resultado ya cargado — no se puede modificar' : !matchStarted ? 'El partido aún no comenzó' : ''}
+          style={(hasResult || !matchStarted) ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
         >
-          {!matchStarted ? '⏳ Partido no iniciado'
+          {hasResult
+            ? '🔒 Resultado cargado'
+            : !matchStarted ? '⏳ Partido no iniciado'
             : status === 'saving' ? 'Guardando...'
             : status === 'saved' ? '✓ Guardado'
             : status === 'future' ? '⚠ Partido no iniciado'
@@ -202,6 +305,11 @@ function KnockoutMatchRow({ match, result, onSave }) {
             : 'Guardar'}
         </button>
       </div>
+
+      <button className="btn-ver-preds" onClick={() => setExpanded(e => !e)}>
+        {expanded ? 'Ocultar pronósticos ▲' : 'Ver pronósticos de todos ▼'}
+      </button>
+      {expanded && <AdminAllKnockoutPredictions matchId={match.id} result={result} />}
     </div>
   );
 }

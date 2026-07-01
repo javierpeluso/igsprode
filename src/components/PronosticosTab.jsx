@@ -1,24 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { GROUPS, ALL_MATCHES, isClosed } from '../data/fixture';
+import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
+import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
+import { Flag } from '../data/flags';
 import MatchCard from './MatchCard';
 import LiveMatchCard from './LiveMatchCard';
 import ProgressBar from './ProgressBar';
 
-// Devuelve true si el partido está en curso según el horario (sin API)
-// Se considera "en vivo" si ya arrancó y no pasaron más de 130 minutos
+// Kickoffs de R16 en adelante (equipos aún no resueltos hasta que avancen los R32)
+const LATER_ROUND_MATCHES = [
+  { id: 'R16_M89',  kickoff: '2026-07-04T18:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M90',  kickoff: '2026-07-04T14:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M91',  kickoff: '2026-07-05T17:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M92',  kickoff: '2026-07-05T21:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M93',  kickoff: '2026-07-06T16:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M94',  kickoff: '2026-07-06T21:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M95',  kickoff: '2026-07-07T13:00:00-03:00', label: '8vos de Final' },
+  { id: 'R16_M96',  kickoff: '2026-07-07T17:00:00-03:00', label: '8vos de Final' },
+  { id: 'QF_M97',   kickoff: '2026-07-09T17:00:00-03:00', label: 'Cuartos de Final' },
+  { id: 'QF_M98',   kickoff: '2026-07-10T16:00:00-03:00', label: 'Cuartos de Final' },
+  { id: 'QF_M99',   kickoff: '2026-07-11T18:00:00-03:00', label: 'Cuartos de Final' },
+  { id: 'QF_M100',  kickoff: '2026-07-11T22:00:00-03:00', label: 'Cuartos de Final' },
+  { id: 'SF_M101',  kickoff: '2026-07-14T16:00:00-03:00', label: 'Semifinal' },
+  { id: 'SF_M102',  kickoff: '2026-07-15T16:00:00-03:00', label: 'Semifinal' },
+  { id: 'TP_M103',  kickoff: '2026-07-18T18:00:00-03:00', label: '3er Puesto' },
+  { id: 'F_M104',   kickoff: '2026-07-19T16:00:00-03:00', label: 'Final' },
+];
+
+function formatKickoff(kickoff) {
+  const d = new Date(kickoff);
+  return (
+    d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) +
+    ' · ' +
+    d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) +
+    'hs'
+  );
+}
+
+// Card informativa sin inputs — mismo estilo que MatchCard cerrado
+function KnockoutInfoCard({ home, away, kickoff, label, onClick }) {
+  const isPending = !home || home.startsWith('G ') || home.startsWith('P ');
+  const isClickable = !!onClick;
+  return (
+    <div
+      className="match-card is-closed"
+      onClick={onClick}
+      style={isClickable ? { cursor: 'pointer', transition: 'opacity 0.15s' } : {}}
+      onMouseEnter={e => isClickable && (e.currentTarget.style.opacity = '0.8')}
+      onMouseLeave={e => isClickable && (e.currentTarget.style.opacity = '1')}
+    >
+      <div className="match-header">
+        <span className="match-date">{formatKickoff(kickoff)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span className="closed-chip" style={{ background: 'var(--c-accent-muted, #2a3a2a)', color: 'var(--c-muted)' }}>
+            {label}
+          </span>
+          {isClickable && (
+            <span style={{ fontSize: 11, color: 'var(--c-muted)', opacity: 0.7 }}>Ver →</span>
+          )}
+        </div>
+      </div>
+      <div className="match-body">
+        <span className="team home">
+          {isPending ? '?' : home}
+          {!isPending && <Flag country={home} />}
+        </span>
+        <div className="score-area">
+          <div className="pred-locked no-pred" style={{ fontSize: 18, letterSpacing: 2 }}>vs</div>
+        </div>
+        <span className="team away">
+          {!isPending && <Flag country={away} />}
+          {isPending ? '?' : away}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 const isLiveNow = (match) => {
-  const now      = Date.now();
-  const kickoff  = new Date(match.kickoff).getTime();
-  const end      = kickoff + 140 * 60_000;
-  return now >= kickoff && now <= end;
+  const now     = Date.now();
+  const kickoff = new Date(match.kickoff).getTime();
+  return now >= kickoff && now <= kickoff + 140 * 60_000;
 };
 
 const isUpcoming72h = (match) => {
   const now     = Date.now();
   const kickoff = new Date(match.kickoff).getTime();
   const cutoff  = kickoff - 10 * 60 * 1000;
-  const in72h   = now + 72 * 60 * 60 * 1000;
-  return cutoff > now && kickoff <= in72h;
+  return cutoff > now && kickoff <= now + 72 * 60 * 60 * 1000;
 };
 
 const FILTERS = [
@@ -28,15 +97,17 @@ const FILTERS = [
   { key: 'pending',  label: 'Sin pronosticar' },
 ];
 
-export default function PronosticosTab({ predictions, results, onSave, currentUid, currentUser }) {
+export default function PronosticosTab({ predictions, results, onSave, onGoToKnockout, currentUid, currentUser }) {
   const [activeGroup, setActiveGroup] = useState('A');
   const [filter, setFilter]           = useState('all');
-  const [now, setNow]                 = useState(Date.now());
 
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30_000);
+    const t = setInterval(() => {}, 30_000);
     return () => clearInterval(t);
   }, []);
+
+  const { manualThirds } = useManualThirds();
+  const standings = useMemo(() => calcAllStandings(results), [results]);
 
   const goToMatch = (match) => {
     const group = match.id.split('_')[0];
@@ -48,10 +119,25 @@ export default function PronosticosTab({ predictions, results, onSave, currentUi
     }, 100);
   };
 
-  const liveMatches     = ALL_MATCHES.filter(m => isLiveNow(m) && !results[m.id]);
-  const upcomingMatches = ALL_MATCHES
-    .filter(m => isUpcoming72h(m))
-    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+  // R32 con equipos resueltos
+  const r32Matches = useMemo(() => BRACKET_MATCHES.map(m => ({
+    id: m.id,
+    kickoff: m.kickoff,
+    label: '16avos de Final',
+    home: resolveSlot(m.slot1, standings, manualThirds, m.id) || m.slot1.label,
+    away: resolveSlot(m.slot2, standings, manualThirds, m.id) || m.slot2.label,
+  })), [standings, manualThirds]);
+
+  // Todos los de eliminatoria para el filtro próximos
+  const allKnockoutMatches = [...r32Matches, ...LATER_ROUND_MATCHES];
+
+  const liveMatches = ALL_MATCHES.filter(m => isLiveNow(m) && !results[m.id]);
+
+  // Upcoming: grupos + eliminatoria, ordenados por kickoff, dentro de 72hs
+  const upcomingMatches = [
+    ...ALL_MATCHES.filter(m => isUpcoming72h(m)).map(m => ({ ...m, _type: 'group' })),
+    ...allKnockoutMatches.filter(m => isUpcoming72h(m)).map(m => ({ ...m, _type: 'knockout' })),
+  ].sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
 
   const getFilteredMatches = () => {
     if (filter === 'live')     return liveMatches;
@@ -60,15 +146,11 @@ export default function PronosticosTab({ predictions, results, onSave, currentUi
     if (filter === 'pending')  return GROUPS[activeGroup].matches.filter(
       m => !isClosed(m) && !results[m.id] && !predictions[m.id]
     );
-    if (filter === 'closed')   return GROUPS[activeGroup].matches.filter(
-      m => isClosed(m) && !results[m.id]
-    );
     return GROUPS[activeGroup].matches;
   };
 
   const totalLive     = liveMatches.length;
   const totalPending  = ALL_MATCHES.filter(m => !isClosed(m) && !results[m.id] && !predictions[m.id]).length;
-  const totalClosed   = ALL_MATCHES.filter(m => isClosed(m) && !results[m.id]).length;
   const totalUpcoming = upcomingMatches.length;
 
   const filteredMatches = getFilteredMatches();
@@ -136,6 +218,14 @@ export default function PronosticosTab({ predictions, results, onSave, currentUi
                 <LiveMatchCard
                   match={match}
                   prediction={predictions[match.id]}
+                />
+              ) : match._type === 'knockout' ? (
+                <KnockoutInfoCard
+                  home={match.home}
+                  away={match.away}
+                  kickoff={match.kickoff}
+                  label={match.label}
+                  onClick={onGoToKnockout}
                 />
               ) : (
                 <MatchCard

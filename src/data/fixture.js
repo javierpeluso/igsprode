@@ -166,7 +166,16 @@ export const formatKickoff = (kickoff) => {
 
 export const calcPoints = (prediction, result) => {
   if (!prediction || !result) return null;
-  if (prediction.home === result.home && prediction.away === result.away) return 3;
+  if (prediction.home === result.home && prediction.away === result.away) {
+    // Si el partido terminó empatado y se definió por penales, el bonus de
+    // 3 puntos solo se otorga si el usuario también acertó el ganador por
+    // penales. Si acertó el resultado de 120' pero falló el ganador,
+    // recibe 1 punto (igual que acertar solo el ganador en tiempo regular).
+    if (result.home === result.away && result.penaltyWinner) {
+      return prediction.penaltyWinner === result.penaltyWinner ? 3 : 1;
+    }
+    return 3;
+  }
   const predWinner = prediction.home > prediction.away ? 'H' : prediction.home < prediction.away ? 'A' : 'D';
   const resWinner  = result.home  > result.away  ? 'H' : result.home  < result.away  ? 'A' : 'D';
   if (predWinner === resWinner) return 1;

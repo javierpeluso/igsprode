@@ -341,6 +341,7 @@ function AuthorizedApp({ user }) {
               predictions={predictions}
               results={results}
               onSave={savePrediction}
+              onGoToKnockout={() => setTab(3)}
               currentUid={user.uid}
               currentUser={user}
             />
