@@ -1,31 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GROUPS, ALL_MATCHES, isClosed } from '../data/fixture';
-import { BRACKET_MATCHES, resolveSlot } from '../data/bracket';
+import { BRACKET_MATCHES, resolveSlot, buildLaterRoundMatchesFlat } from '../data/bracket';
 import { calcAllStandings, useManualThirds } from '../hooks/useBracket';
 import { Flag } from '../data/flags';
 import MatchCard from './MatchCard';
 import LiveMatchCard from './LiveMatchCard';
 import ProgressBar from './ProgressBar';
-
-// Kickoffs de R16 en adelante (equipos aún no resueltos hasta que avancen los R32)
-const LATER_ROUND_MATCHES = [
-  { id: 'R16_M89',  kickoff: '2026-07-04T18:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M90',  kickoff: '2026-07-04T14:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M91',  kickoff: '2026-07-05T17:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M92',  kickoff: '2026-07-05T21:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M93',  kickoff: '2026-07-06T16:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M94',  kickoff: '2026-07-06T21:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M95',  kickoff: '2026-07-07T13:00:00-03:00', label: '8vos de Final' },
-  { id: 'R16_M96',  kickoff: '2026-07-07T17:00:00-03:00', label: '8vos de Final' },
-  { id: 'QF_M97',   kickoff: '2026-07-09T17:00:00-03:00', label: 'Cuartos de Final' },
-  { id: 'QF_M98',   kickoff: '2026-07-10T16:00:00-03:00', label: 'Cuartos de Final' },
-  { id: 'QF_M99',   kickoff: '2026-07-11T18:00:00-03:00', label: 'Cuartos de Final' },
-  { id: 'QF_M100',  kickoff: '2026-07-11T22:00:00-03:00', label: 'Cuartos de Final' },
-  { id: 'SF_M101',  kickoff: '2026-07-14T16:00:00-03:00', label: 'Semifinal' },
-  { id: 'SF_M102',  kickoff: '2026-07-15T16:00:00-03:00', label: 'Semifinal' },
-  { id: 'TP_M103',  kickoff: '2026-07-18T18:00:00-03:00', label: '3er Puesto' },
-  { id: 'F_M104',   kickoff: '2026-07-19T16:00:00-03:00', label: 'Final' },
-];
 
 function formatKickoff(kickoff) {
   const d = new Date(kickoff);
@@ -128,8 +108,11 @@ export default function PronosticosTab({ predictions, results, onSave, onGoToKno
     away: resolveSlot(m.slot2, standings, manualThirds, m.id) || m.slot2.label,
   })), [standings, manualThirds]);
 
+  // 8vos en adelante, con equipos resueltos a partir de los resultados cargados
+  const laterRoundMatches = useMemo(() => buildLaterRoundMatchesFlat(results), [results]);
+
   // Todos los de eliminatoria para el filtro próximos
-  const allKnockoutMatches = [...r32Matches, ...LATER_ROUND_MATCHES];
+  const allKnockoutMatches = [...r32Matches, ...laterRoundMatches];
 
   const liveMatches = ALL_MATCHES.filter(m => isLiveNow(m) && !results[m.id]);
 
