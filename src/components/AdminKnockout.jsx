@@ -50,8 +50,8 @@ function buildLaterRoundMatches(knockoutResults) {
   ];
   const qf = [
     { id: 'QF_M97',  home: getWinner('R16_M89'), away: getWinner('R16_M90'), date: '9 jul',  label: 'Cuartos M97',  kickoff: '2026-07-09T17:00:00-03:00' },
-    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), date: '10 jul', label: 'Cuartos M98',  kickoff: '2026-07-10T16:00:00-03:00' },
-    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), date: '11 jul', label: 'Cuartos M99',  kickoff: '2026-07-11T18:00:00-03:00' },
+    { id: 'QF_M98',  home: getWinner('R16_M91'), away: getWinner('R16_M92'), date: '11 jul', label: 'Cuartos M98',  kickoff: '2026-07-11T17:00:00-03:00' },
+    { id: 'QF_M99',  home: getWinner('R16_M93'), away: getWinner('R16_M94'), date: '10 jul', label: 'Cuartos M99',  kickoff: '2026-07-10T16:00:00-03:00' },
     { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), date: '11 jul', label: 'Cuartos M100', kickoff: '2026-07-11T22:00:00-03:00' },
   ];
   const sf = [
