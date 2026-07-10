@@ -271,22 +271,31 @@ function FaseEliminatoria({ results }) {
   const tpEnriched   = enrichWithLabels(tp);
   const finEnriched  = enrichWithLabels(finalMatch);
 
-  // Separar en lado izquierdo (P74-P81 en orden imagen) y derecho (P76-P88)
-  // Orden según imagen: izq top→centro, der centro→bottom
-  // Izquierda R32: M74, M73, M75 (arriba a la izq del bracket, P74, P77, P73, P75, P83, P84, M80, M82 por orden visual)
-  // Usamos el orden de BRACKET_MATCHES tal como están definidos
-  // Orden visual según imagen oficial FIFA 2026 (top → centro izq, centro → bottom der)
-  // Lado izquierdo:  M74, M77, M73, M75, M83, M84, M81, M82
-  // Lado derecho:    M76, M78, M80, M79, M86, M88, M85, M87
-  const leftR32  = [r32Matches.find(m=>m.id==='R32_M74'), r32Matches.find(m=>m.id==='R32_M77'), r32Matches.find(m=>m.id==='R32_M73'), r32Matches.find(m=>m.id==='R32_M75'), r32Matches.find(m=>m.id==='R32_M83'), r32Matches.find(m=>m.id==='R32_M84'), r32Matches.find(m=>m.id==='R32_M81'), r32Matches.find(m=>m.id==='R32_M82')].filter(Boolean);
-  const rightR32 = [r32Matches.find(m=>m.id==='R32_M76'), r32Matches.find(m=>m.id==='R32_M78'), r32Matches.find(m=>m.id==='R32_M79'), r32Matches.find(m=>m.id==='R32_M80'), r32Matches.find(m=>m.id==='R32_M86'), r32Matches.find(m=>m.id==='R32_M88'), r32Matches.find(m=>m.id==='R32_M85'), r32Matches.find(m=>m.id==='R32_M87')].filter(Boolean);
+  // Separar en lado izquierdo y derecho SEGÚN LA MITAD REAL DEL CUADRO
+  // (a qué Semifinal alimenta cada partido), no solo por fecha.
+  // Mitad A (alimenta SF_M101): M73, M74, M75, M76, M77, M78, M79, M80  → lado DERECHO
+  // Mitad B (alimenta SF_M102): M81, M82, M83, M84, M85, M86, M87, M88 → lado IZQUIERDO
+  // (Se elige que la Mitad A quede a la derecha porque ahí es donde
+  // históricamente se venía mostrando el cruce que incluye a Brasil-Noruega.)
+  // OJO: antes de esta corrección, M76/M78/M79/M80 (mitad A) se dibujaban
+  // en la columna derecha de 16avos, pero R16_M91/R16_M92/QF_M98 — que
+  // dependen de esos mismos partidos — se dibujaban en las columnas
+  // IZQUIERDAS de 8vos/cuartos (por el slice(0,4)/slice(0,2) fijo). Por eso
+  // un equipo que ganaba un partido "de la derecha" terminaba avanzando
+  // y apareciendo del lado izquierdo del cuadro. Ahora ambos lados usan
+  // siempre la misma mitad de principio a fin.
+  const leftR32  = [r32Matches.find(m=>m.id==='R32_M83'), r32Matches.find(m=>m.id==='R32_M84'), r32Matches.find(m=>m.id==='R32_M81'), r32Matches.find(m=>m.id==='R32_M82'), r32Matches.find(m=>m.id==='R32_M86'), r32Matches.find(m=>m.id==='R32_M88'), r32Matches.find(m=>m.id==='R32_M85'), r32Matches.find(m=>m.id==='R32_M87')].filter(Boolean);
+  const rightR32 = [r32Matches.find(m=>m.id==='R32_M74'), r32Matches.find(m=>m.id==='R32_M77'), r32Matches.find(m=>m.id==='R32_M73'), r32Matches.find(m=>m.id==='R32_M75'), r32Matches.find(m=>m.id==='R32_M76'), r32Matches.find(m=>m.id==='R32_M78'), r32Matches.find(m=>m.id==='R32_M79'), r32Matches.find(m=>m.id==='R32_M80')].filter(Boolean);
 
-  const leftR16  = r16Enriched.slice(0, 4);
-  const rightR16 = r16Enriched.slice(4, 8);
-  const leftQF   = qfEnriched.slice(0, 2);
-  const rightQF  = qfEnriched.slice(2, 4);
-  const leftSF   = sfEnriched.slice(0, 1);
-  const rightSF  = sfEnriched.slice(1, 2);
+  // r16Enriched viene en orden oficial [M89,M90,M91,M92, M93,M94,M95,M96].
+  // M89-M92 dependen de la Mitad A (73-80) → ahora del lado derecho.
+  // M93-M96 dependen de la Mitad B (81-88) → ahora del lado izquierdo.
+  const rightR16 = r16Enriched.slice(0, 4);
+  const leftR16  = r16Enriched.slice(4, 8);
+  const rightQF  = qfEnriched.slice(0, 2);
+  const leftQF   = qfEnriched.slice(2, 4);
+  const rightSF  = sfEnriched.slice(0, 1);
+  const leftSF   = sfEnriched.slice(1, 2);
 
   const CUP_URL = 'https://res.cloudinary.com/dzof25mgq/image/upload/v1779284221/copa_del_mundo_sfms28.png';
 
