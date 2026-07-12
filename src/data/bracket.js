@@ -113,8 +113,8 @@ export function buildLaterRoundMatches(knockoutResults) {
     { id: 'QF_M100', home: getWinner('R16_M95'), away: getWinner('R16_M96'), label: 'M100', kickoff: LATER_ROUND_KICKOFFS.QF_M100 },
   ];
   const sf = [
-    { id: 'SF_M101', home: getWinner('QF_M97'),  away: getWinner('QF_M98'),  label: 'M101', kickoff: LATER_ROUND_KICKOFFS.SF_M101 },
-    { id: 'SF_M102', home: getWinner('QF_M99'),  away: getWinner('QF_M100'), label: 'M102', kickoff: LATER_ROUND_KICKOFFS.SF_M102 },
+    { id: 'SF_M101', home: getWinner('QF_M97'),  away: getWinner('QF_M99'),  label: 'M101', kickoff: LATER_ROUND_KICKOFFS.SF_M101 },
+    { id: 'SF_M102', home: getWinner('QF_M98'),  away: getWinner('QF_M100'), label: 'M102', kickoff: LATER_ROUND_KICKOFFS.SF_M102 },
   ];
   const tp = [
     { id: 'TP_M103', home: getLoser('SF_M101'),  away: getLoser('SF_M102'),  label: 'M103', kickoff: LATER_ROUND_KICKOFFS.TP_M103 },

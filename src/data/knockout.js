@@ -188,8 +188,8 @@ export function generateKnockoutFixture(positions, bestThirds) {
 
   // Semis — partidos 101-102
   const sf = [
-    { id: 'SF_M101', home: 'G M97', away: 'G M98', date: '14 jul', label: 'Semi M101' },
-    { id: 'SF_M102', home: 'G M99', away: 'G M100', date: '15 jul', label: 'Semi M102' },
+    { id: 'SF_M101', home: 'G M97', away: 'G M99', date: '14 jul', label: 'Semi M101' },
+    { id: 'SF_M102', home: 'G M98', away: 'G M100', date: '15 jul', label: 'Semi M102' },
   ];
 
   // 3er puesto y final
