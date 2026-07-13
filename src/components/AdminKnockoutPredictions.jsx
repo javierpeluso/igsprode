@@ -57,8 +57,8 @@ function buildLaterRoundMatches(knockoutResults) {
       { id:'QF_M100',  home:getWinner('R16_M95'), away:getWinner('R16_M96'), label:'Cuartos M100', date:'11 jul', kickoff:'2026-07-11T22:00:00-03:00' },
     ],
     SF: [
-      { id:'SF_M101',  home:getWinner('QF_M97'),  away:getWinner('QF_M98'),  label:'Semi M101', date:'14 jul', kickoff:'2026-07-14T16:00:00-03:00' },
-      { id:'SF_M102',  home:getWinner('QF_M99'),  away:getWinner('QF_M100'), label:'Semi M102', date:'15 jul', kickoff:'2026-07-15T16:00:00-03:00' },
+      { id:'SF_M101',  home:getWinner('QF_M97'),  away:getWinner('QF_M99'),  label:'Semi M101', date:'14 jul', kickoff:'2026-07-14T16:00:00-03:00' },
+      { id:'SF_M102',  home:getWinner('QF_M98'),  away:getWinner('QF_M100'), label:'Semi M102', date:'15 jul', kickoff:'2026-07-15T16:00:00-03:00' },
     ],
     TP: [
       { id:'TP_M103',  home:getLoser('SF_M101'),  away:getLoser('SF_M102'),  label:'3er Puesto', date:'18 jul', kickoff:'2026-07-18T18:00:00-03:00' },
